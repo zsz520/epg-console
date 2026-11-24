@@ -1,0 +1,5 @@
+{% extends 'public/base.html' %}{% block title %}{{ title }} · EPG{% endblock %}{% block content %}<section class="public-hero"><span class="eyebrow">PROGRAMME GUIDE</span><h1>{{ title }}</h1><p>来源：{{ source|default:'暂无数据' }}</p><div class="date-nav"><a href="{{ yesterday_url }}">← 前一天</a><a href="{{ tomorrow_url }}">后一天 →</a></div></section><section class="public-panel programme-list">{% for epg in epgs %}<div class="programme"><time>{% firstof epg.starttime epg.start "—" %} — {% if epg.end_missing %}未提供{% else %}{% if epg.end_next_day %}次日 {% endif %}{% firstof epg.endtime epg.end "—" %}{% endif %}{% if epg.gap_filler %} · 缺失补全{% endif %}{% if epg.inferred_end %}（时间补全）{% endif %}{% if epg.split_fragment %} · 跨日衔接{% endif %}</time><div><b>{{ epg.title }}</b>{% if epg.descr %}<p>{{ epg.descr }}</p>{% endif %}</div></div>{% empty %}<p>{{ empty_message|default:'暂无此日期的节目数据。' }}</p>{% endfor %}</section>{% endblock %}
+
+
+
+
