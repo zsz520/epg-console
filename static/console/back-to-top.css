@@ -1,0 +1,9 @@
+.back-to-top, .back-to-bottom { position:fixed; right:max(20px,env(safe-area-inset-right)); bottom:max(20px,env(safe-area-inset-bottom)); z-index:90;
+  width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center;
+  border:1px solid #2765a1; border-radius:12px; background:#397cb8; color:#fff;
+  box-shadow:0 4px 16px #193e652e; font:600 24px/1 system-ui,sans-serif; cursor:pointer; }
+.back-to-top:hover, .back-to-bottom:hover { background:#28689f; }
+.back-to-top:focus-visible, .back-to-bottom:focus-visible { outline:3px solid #74b7ee; outline-offset:3px; }
+.back-to-top[hidden], .back-to-bottom[hidden] { display:none; }
+
+.back-to-top { bottom:calc(max(20px,env(safe-area-inset-bottom)) + 54px); }
