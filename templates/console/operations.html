@@ -1,0 +1,7 @@
+{% extends 'admin/base_site.html' %}{% block content %}
+<section class="hero compact"><div><h1>任务中心</h1><p>提交抓取或生成任务，点击记录查看实时进度、来源结果与日志。历史记录也可在左侧“后台任务”筛选查看。</p></div></section>
+<section class="panel"><p>新增来源：把单个 .py 文件放入本地 data/sources/，重启容器后自动注册。仅放入自己编写或信任的来源代码。</p>{% if source_errors %}<h2>来源文件未加载</h2><ul>{% for error in source_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}</section><section class="panel"><h2>运行参数</h2><p>任务、跨午夜分割、抓取、预览和导出参数已集中到 <a href="{% url 'admin:settings-center' %}">设置中心</a>。</p>{{ settings_form.non_field_errors }}{% for field in settings_form %}{{ field.errors }}{% endfor %}</section>
+<section class="panel"><form method="post" action="{% url 'admin:operation-start' %}" class="toolbar">{% csrf_token %}<select name="kind"><option value="catalog">抓取频道目录</option><option value="epg">抓取节目单</option><option value="xml">重新生成 XML</option><option value="xmltv">更新 XMLTV 来源</option></select><select name="source"><option value="">全部来源</option>{% for key,label in sources %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select><button type="submit" class="primary">提交任务</button><small>来源选项仅用于频道目录任务。</small></form></section>
+<section class="panel"><p>远端 XML / XML.GZ 地址请在 <a href="{% url 'admin:web_xmltvfeed_changelist' %}">XMLTV 来源</a> 添加。抓取节目单会先更新所有已启用文件，再读取所选频道；仅“重新生成 XML”不会下载远端文件。</p></section>
+<section class="panel"><p><a href="{% url 'admin:maintenance' %}">失败项补抓、备份恢复与清理 →</a></p>{% include 'console/task_table.html' %}</section>{% endblock %}
+

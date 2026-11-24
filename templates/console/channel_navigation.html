@@ -1,0 +1,8 @@
+{% if change and not is_popup %}<div class="channel-navigation" data-has-errors="{% if errors %}true{% else %}false{% endif %}">
+<nav class="channel-neighbours" aria-label="切换频道">
+{% if channel_navigation.previous %}<a class="button secondary" data-channel-direction="previous" href="{{ channel_navigation.previous.url }}" title="上一个：{{ channel_navigation.previous.name }}">← 上一个频道</a>{% else %}<span class="button disabled" aria-disabled="true">← 上一个频道</span>{% endif %}
+{% if channel_navigation.position %}<span class="channel-position">{{ channel_navigation.position }} / {{ channel_navigation.total }}</span>{% endif %}
+{% if channel_navigation.next %}<a class="button secondary" data-channel-direction="next" href="{{ channel_navigation.next.url }}" title="下一个：{{ channel_navigation.next.name }}">下一个频道 →</a>{% else %}<span class="button disabled" aria-disabled="true">下一个频道 →</span>{% endif %}
+</nav>
+<div class="channel-navigation-warning" role="alert" hidden><p>当前频道有未保存的修改。</p><div class="channel-warning-actions"><button type="button" class="primary" data-navigation-action="save">保存并切换</button><button type="button" class="secondary" data-navigation-action="discard">放弃修改并切换</button><button type="button" class="secondary" data-navigation-action="cancel">取消</button></div></div>
+</div>{% endif %}

@@ -1,0 +1,6 @@
+{% extends 'admin/base_site.html' %}{% block content %}
+<section class="hero compact"><div><h1>删除节目单</h1><p>仅删除已入库节目，保留频道、来源 ID、目录及 XMLTV 来源地址。</p></div></section>
+<section class="panel"><p>指定日期按节目开始日期删除（包含起止日期）；开始、结束填同一天即可删除一天。跨日衔接显示由剩余原始节目决定。全部删除会清空所有已入库节目。</p><p>自动抓取或排队的抓取任务可能再次写入节目，需要持续留空时请先关闭自动抓取并取消相关任务。XMLTV 原始快照保留；后续抓取仍可重新导入。补全开启时，页面仍可能显示“精彩继续”占位节目。</p>{% if error %}<p class="errornote">{{ error }}</p>{% endif %}<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit" class="secondary">预览删除范围</button></form></section>
+{% if token %}<section class="panel"><h2>确认删除范围</h2><p><strong>{% if plan.scope == 'all' %}全部已入库节目{% else %}{{ plan.start }} 至 {{ plan.end }}（含首尾）{% endif %}：{{ plan.count }} 条。</strong></p><p>删除任务由后台串行执行，不与抓取同时写数据。只处理本次预览的记录；数据数量变化时拒绝执行，需重新预览。确认有效期 15 分钟。</p>{% if plan.count %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="apply"><input type="hidden" name="token" value="{{ token }}"><p><label><input type="checkbox" name="confirmed" required> 已确认以上范围，删除不可撤销</label></p><button type="submit" class="deletelink">确认删除节目单</button></form>{% else %}<p>此范围无节目，无需删除。</p>{% endif %}</section>{% endif %}
+{% endblock %}
+
