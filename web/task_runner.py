@@ -12,8 +12,9 @@ from .catalog import SOURCE_NAMES
 
 
 def main(pk):
-    from .options import apply_legacy
+    from .options import apply_legacy, options
     apply_legacy()
+    opts = options()
     task = Task.objects.get(pk=pk)
     if task.kind in ('retry','backup','restore','cleanup'):
         if task.kind=='retry':
@@ -48,7 +49,7 @@ def main(pk):
         return
     from .xmltv import refresh_feeds_for_task
     xmltv_results = []
-    if task.kind in ('epg', 'xmltv'):
+    if task.kind == 'xmltv' or (task.kind == 'epg' and opts['xmltv_with_epg']):
         xmltv_results = refresh_feeds_for_task(task)
     if task.kind == 'xmltv':
         passed = sum(row['status'] == 'success' for row in xmltv_results)
@@ -59,25 +60,46 @@ def main(pk):
         from .runtime_config import get_config
         source_timeout = get_config().source_timeout_seconds
         results = []
-        sources = [task.source] if task.source else list(SOURCE_NAMES)
+        if task.source:
+            sources = [task.source]
+        else:
+            selected = opts['catalog_sources']
+            sources = [key for key in SOURCE_NAMES if key != 'xmltv' and (not selected or key in selected)]
+            if opts['xmltv_with_catalog']:
+                sources.append('xmltv')
+        if not sources:
+            Task.objects.filter(pk=pk).update(status='failed', summary='当前自动刷新范围没有已加载来源，请检查来源范围或启用来源文件。')
+            return
         for source in sources:
             if source == 'xmltv':
                 feeds = refresh_feeds_for_task(task)
                 failed = any(row['status'] != 'success' for row in feeds)
                 results.append({'source': source, 'status': 'failed' if failed else 'success', 'feeds': feeds})
                 continue
+            if source not in SOURCE_NAMES:
+                results.append({'source': source, 'status': 'failed', 'error': '来源未注册或已停用，请检查来源文件。'})
+                continue
             print(f'正在抓取 {SOURCE_NAMES[source]} ({source})…', flush=True)
             Task.objects.filter(pk=pk).update(summary=f'正在抓取 {SOURCE_NAMES[source]}；已处理 {len(results)}/{len(sources)} 个来源')
-            try:
+            for attempt in range(1, opts['catalog_retries'] + 1):
                 result_file = Path(os.getenv('EPG_DATA_DIR', '/data')) / 'tasks' / f'{pk}-{source}.json'
-                child = subprocess.run([sys.executable, '-m', 'web.catalog_runner', source, str(result_file)],
-                                       timeout=source_timeout)
-                if child.returncode or not result_file.exists():
-                    raise ValueError(f'来源执行失败（退出码 {child.returncode}），详情见运行日志。')
-                results.append({**json.loads(result_file.read_text(encoding='utf-8')), 'status': 'success'})
-            except Exception as exc:
-                results.append({'source': source, 'status': 'failed', 'error': str(exc)[-1000:]})
-                print(f'{source} 获取失败：{exc}', flush=True)
+                try:
+                    result_file.unlink(missing_ok=True)
+                    child = subprocess.run([sys.executable, '-m', 'web.catalog_runner', source, str(result_file)],
+                                           timeout=source_timeout)
+                    if child.returncode or not result_file.exists():
+                        raise ValueError(f'来源执行失败（退出码 {child.returncode}），详情见运行日志。')
+                    result = {**json.loads(result_file.read_text(encoding='utf-8')), 'status': 'success', 'attempts': attempt}
+                    break
+                except Exception as exc:
+                    result = {'source': source, 'status': 'failed', 'error': str(exc)[-1000:], 'attempts': attempt}
+                    print(f'{source} 第 {attempt}/{opts["catalog_retries"]} 次获取失败：{exc}', flush=True)
+                    if attempt < opts['catalog_retries']:
+                        import time
+                        time.sleep(opts['catalog_retry_delay_seconds'])
+                finally:
+                    result_file.unlink(missing_ok=True)
+            results.append(result)
             Task.objects.filter(pk=pk).update(details=results, summary=f'已处理 {len(results)}/{len(sources)} 个来源')
         passed = sum(r['status'] == 'success' for r in results)
         Task.objects.filter(pk=pk).update(

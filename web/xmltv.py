@@ -56,8 +56,8 @@ def parse_time(value):
 
 
 def download(url, destination):
-    from .options import options
     from .runtime_config import get_config
+    from .options import options
     config=get_config(); opts=options(config)
     limit=config.options.get('xmltv_download_mib',MAX_DOWNLOAD//1024//1024)*1024*1024
     deadline = time.monotonic() + opts['xmltv_download_seconds']
@@ -280,7 +280,7 @@ def refresh_feeds_for_task(task):
     import subprocess
     import sys
     from .models import Task
-    from .runtime_config import get_config
+    from .options import options
     rows = XmltvFeed.objects.filter(enabled=True)
     if task.params.get('feed_ids'):
         rows = rows.filter(pk__in=task.params['feed_ids'])
@@ -289,7 +289,7 @@ def refresh_feeds_for_task(task):
         Task.objects.filter(pk=task.pk).update(summary=f'正在更新 XMLTV：{feed.name}')
         output = directory() / f'result-{task.pk}-{feed.pk}.json'
         output.unlink(missing_ok=True)
-        timeout = get_config().source_timeout_seconds
+        timeout = options()['xmltv_source_timeout_seconds']
         try:
             child = subprocess.run([sys.executable, '-m', 'web.xmltv_runner', str(feed.pk), str(output)],
                 timeout=timeout)

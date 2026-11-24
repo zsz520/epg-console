@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       let count=0;
       section.querySelectorAll('.setting-field').forEach(field=>{
         const matches=!query || (field.textContent+' '+field.dataset.setting).toLocaleLowerCase().includes(query);
-        const show=field.dataset.error==='true' || matches && (query || advanced.checked || field.dataset.advanced!=='true');
+        const show=field.dataset.error==='true' || matches && (query || advanced.checked || field.dataset.advanced!=='true') && (query || field.dataset.scheduleHidden!=='true');
         field.hidden=!show;if(show){count++;visible++;}
       });
       section.hidden=count===0;
@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   search.addEventListener('input',update);
   search.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
   advanced.addEventListener('change',update);
+  document.addEventListener('settings:visibility',update);
   document.querySelector('.settings-clear').addEventListener('click',()=>{search.value='';update();search.focus();});
   update();
 });

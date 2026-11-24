@@ -6,6 +6,17 @@ from .models import Channel
 
 # key, label, min/max or text marker, section
 SPECS=[
+ ('catalog_bootstrap_new_sources','新来源首次自动抓取目录','bool',None,'频道列表自动抓取'),
+ ('catalog_retry_failed_on_restart','重启后重试首次目录抓取失败的来源','bool',None,'频道列表自动抓取'),
+ ('catalog_refresh_on_restart','每次重启刷新频道目录','bool',None,'频道列表自动抓取'),
+ ('catalog_sources','自动刷新来源范围','sources',None,'频道列表自动抓取'),
+ ('catalog_retries','单个来源目录最大尝试次数',1,5,'频道列表自动抓取'),
+ ('catalog_retry_delay_seconds','目录失败重试等待（秒）',0,60,'频道列表自动抓取'),
+ ('catalog_task_timeout_seconds','频道目录整批任务超时（秒）',10,86400,'频道列表自动抓取'),
+ ('xmltv_with_epg','抓取节目单时同时更新 XMLTV','bool',None,'XMLTV 来源抓取'),
+ ('xmltv_with_catalog','抓取频道目录时同时更新 XMLTV','bool',None,'XMLTV 来源抓取'),
+ ('xmltv_task_timeout_seconds','XMLTV 整批更新任务超时（秒）',10,86400,'XMLTV 来源抓取'),
+ ('xmltv_source_timeout_seconds','单个 XMLTV 文件更新超时（秒）',5,3600,'XMLTV 来源抓取'),
  ('auto_retry_failures','自动补抓失败项','bool',None,'失败补抓'),
  ('failure_retry_minutes','失败后等待多少分钟补抓',1,1440,'失败补抓'),
  ('failure_retry_rounds','每项最多自动补抓轮数',1,10,'失败补抓'),
@@ -37,10 +48,10 @@ SPECS=[
  ('preview_timeout','单次节目预览超时（秒）',5,90,'节目预览'),('preview_cache_seconds','成功预览缓存（秒，0 不缓存）',0,3600,'节目预览'),
  ('preview_error_cache_seconds','失败预览缓存（秒，0 不缓存）',0,300,'节目预览'),('preview_concurrency','服务端最多同时预览数',1,3,'节目预览'),
  ('preview_rows','每个来源最多显示节目数',10,5000,'节目预览'),('preview_previous_day','分割模式预览时补查前一天衔接节目','bool',None,'节目预览'),
- ('xmltv_download_mib','XMLTV 下载上限（MiB）',1,1024,'XMLTV 文件'),('xmltv_expanded_mib','XMLTV 展开上限（MiB）',1,4096,'XMLTV 文件'),
- ('xmltv_max_programmes','XMLTV 节目条数上限',100,10000000,'XMLTV 文件'),('xmltv_download_seconds','XMLTV 文件下载总时限（秒）',5,3600,'XMLTV 文件'),
- ('xmltv_connect_seconds','XMLTV 连接超时（秒）',1,120,'XMLTV 文件'),('xmltv_read_seconds','XMLTV 读取超时（秒）',1,300,'XMLTV 文件'),
- ('xmltv_snapshot_keep','每个文件保留的成功快照数',1,10,'XMLTV 文件'),('xmltv_snapshot_grace_seconds','旧快照清理等待（秒）',60,86400,'XMLTV 文件'),
+ ('xmltv_download_mib','XMLTV 下载上限（MiB）',1,1024,'XMLTV 来源抓取'),('xmltv_expanded_mib','XMLTV 展开上限（MiB）',1,4096,'XMLTV 来源抓取'),
+ ('xmltv_max_programmes','XMLTV 节目条数上限',100,10000000,'XMLTV 来源抓取'),('xmltv_download_seconds','XMLTV 文件下载总时限（秒）',5,3600,'XMLTV 来源抓取'),
+ ('xmltv_connect_seconds','XMLTV 连接超时（秒）',1,120,'XMLTV 来源抓取'),('xmltv_read_seconds','XMLTV 读取超时（秒）',1,300,'XMLTV 来源抓取'),
+ ('xmltv_snapshot_keep','每个文件保留的成功快照数',1,10,'XMLTV 来源抓取'),('xmltv_snapshot_grace_seconds','旧快照清理等待（秒）',60,86400,'XMLTV 来源抓取'),
  ('site_name','网站名称','text',80,'网页与后台'),('admin_name','后台名称','text',80,'网页与后台'),
  ('list_per_page','后台频道每页条数',10,500,'网页与后台'),('catalog_search_limit','每次目录搜索返回条数',10,200,'网页与后台'),
  ('task_log_bytes','任务页面读取日志末尾字节数',1000,200000,'网页与后台'),
@@ -72,6 +83,11 @@ class SettingsForm(RuntimeConfigForm):
             if kind=='categories': groups.update(self.opts[key])
         for key,label,kind,maximum,_ in SPECS:
             if kind=='bool': field=forms.BooleanField(label=label,required=False)
+            elif kind=='sources':
+                from crawl.source_registry import get_source_names
+                names={key:value for key,value in get_source_names().items() if key!='xmltv'}
+                for source in self.opts[key]: names.setdefault(source,source+'（未加载）')
+                field=forms.MultipleChoiceField(label=label,choices=list(names.items()),required=False,widget=CategoryPicker(group_label='来源'))
             elif kind=='categories': field=forms.MultipleChoiceField(label=label,choices=[(v,v) for v in sorted(groups) if v],required=False,widget=CategoryPicker(group_label=label))
             elif kind in ('text','file','lines'):
                 field=forms.CharField(label=label,required=False,max_length=maximum or 10000,
@@ -88,25 +104,36 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['retries'].help_text='包含首次请求；主来源和每个备用来源统一使用此次数。'
         self.fields['retry_delay_seconds'].help_text='同一来源连续尝试之间等待；默认 1 秒，0 表示立即重试。'
         self.fields['retain_days'].help_text='默认不清理；只有启用上方自动清理开关才删除过期节目。'
-        self.fields['xmltv_download_seconds'].help_text='文件更新整体仍受任务中心单来源超时限制。'
+        self.fields['xmltv_download_seconds'].help_text='仅限制下载阶段；单个 XMLTV 来源的下载、解压与索引整体受下方单文件超时限制。'
+        self.fields['catalog_bootstrap_new_sources'].help_text='默认开启。重启后发现 data/sources 中没有目录的新来源，自动排队抓取；独立于定时总开关和来源范围，不会自动新增实际频道。'
+        self.fields['catalog_retry_failed_on_restart'].help_text='配合新来源首次抓取；开启后，首次抓取失败的来源下次重启再尝试，已有目录的来源不重复抓取。'
+        self.fields['catalog_refresh_on_restart'].help_text='需要开启自动抓取频道列表。每次重启刷新选定范围；已有目录抓取任务排队或执行时，不重复提交整批任务。'
+        self.fields['catalog_sources'].help_text='定时与每次重启刷新使用此范围；不选表示所有脚本来源。新来源首次抓取、手动指定来源不受此范围限制；XMLTV 由独立跟随开关控制。'
+        self.fields['catalog_retries'].help_text='含首次尝试；空目录、超时或执行失败时按此次数重试，失败保留原目录。'
+        self.fields['source_timeout_seconds'].help_text='仅限制单个脚本来源每次目录抓取；XMLTV 使用独立超时。'
+        self.fields['xmltv_with_epg'].help_text='保留旧版默认行为。关闭后节目单任务读取已有 XMLTV 快照；请通过独立计划或手动更新保持快照最新。'
+        self.fields['xmltv_with_catalog'].help_text='只对整批频道目录任务生效；手动指定 XMLTV 更新仍可执行。'
+        self.fields['xmltv_source_timeout_seconds'].help_text='含下载、解压和索引；与脚本来源目录超时分开。失败保留最近成功快照。'
         self.fields['split_midnight'].help_text='所有来源统一处理；次日 00:00 至首档开始使用前一日末档名称，避免重叠。缺失时段以“精彩继续”补齐，日尾 23:59:59。原始数据保留。'
         self.fields['auto_retry_failures'].help_text='只补抓今天及配置抓取范围内的失败频道/日期；不抓过去日期，不改变来源 ID 顺序。正常整批抓取仍独立执行。保存后对新到期项生效。'
         self.fields['failure_retry_rounds'].help_text='补抓轮数不含原始整批抓取；每轮内部仍使用单来源尝试次数。成功后自动清除失败状态。'
         self.fields['quality_check'].help_text='默认关闭。检查有足够旧节目的日期，数量骤减或空缺过长时保留旧节目并记录失败项。判断在入库前执行，原始节目参与比较。'
         self.fields['auto_backup'].help_text='包含数据库、账号、设置、自定义来源、XMLTV 快照和导出文件。通过后台串行任务执行；保存后按下一个时间点执行。'
         self.fields['auto_cleanup'].help_text='默认关闭。每日清理已完成任务的旧日志、过期预览缓存和超出保留份数的备份；不删频道、节目、自定义来源、XMLTV 快照。可先到维护中心预览。'
-        advanced={'retry_delay_seconds','quality_min_percent','quality_min_old_count','quality_gap_minutes','backup_hour','backup_keep','cleanup_log_days','cleanup_cache_days','xmltv_download_mib','xmltv_expanded_mib','xmltv_max_programmes','xmltv_download_seconds','xmltv_connect_seconds','xmltv_read_seconds','xmltv_snapshot_keep','xmltv_snapshot_grace_seconds','task_log_bytes','preview_error_cache_seconds','preview_rows','preview_concurrency'}
+        advanced={'catalog_retry_delay_seconds','retry_delay_seconds','quality_min_percent','quality_min_old_count','quality_gap_minutes','backup_hour','backup_keep','cleanup_log_days','cleanup_cache_days','xmltv_download_mib','xmltv_expanded_mib','xmltv_max_programmes','xmltv_download_seconds','xmltv_connect_seconds','xmltv_read_seconds','xmltv_snapshot_keep','xmltv_snapshot_grace_seconds','task_log_bytes','preview_error_cache_seconds','preview_rows','preview_concurrency'}
         for key,field in self.fields.items():field.is_advanced=key in advanced
 
     def clean(self):
         data=super().clean()
         full=self.data.get('_settings_full')=='1'
+        modern=self.data.get('_settings_version')=='2'
         if not full and 'split_midnight' not in self.data:
             data['split_midnight']=self.instance.split_midnight
         if not full and 'fill_programme_gaps' not in self.data:
             data['fill_programme_gaps']=self.instance.fill_programme_gaps
         for key,_,kind,_,_ in SPECS:
-            if key not in self.data and (not full or kind not in ('bool','categories','lines')):
+            new_option=key.startswith('catalog_') or key in ('xmltv_with_epg','xmltv_with_catalog')
+            if key not in self.data and (not full or kind not in ('bool','categories','lines','sources') or (new_option and not modern)):
                 data[key]=self.opts[key]
             if isinstance(kind,int) and data.get(key) is None:
                 data[key]=self.opts[key]
@@ -117,6 +144,8 @@ class SettingsForm(RuntimeConfigForm):
         if data.get('export_days',1)>data.get('crawl_days',31): self.add_error('export_days','导出天数不能超过抓取天数。')
         if data.get('recrawl_days',1)>data.get('crawl_days',31): self.add_error('recrawl_days','重新抓取天数不能超过抓取天数。')
         if data.get('xmltv_expanded_mib',4096)<data.get('xmltv_download_mib',1): self.add_error('xmltv_expanded_mib','展开上限不能小于下载上限。')
+        if data.get('source_timeout_seconds',0)>data.get('catalog_task_timeout_seconds',86400): self.add_error('source_timeout_seconds','单来源目录超时不能超过频道目录整批任务超时。')
+        if data.get('xmltv_source_timeout_seconds',0)>data.get('xmltv_task_timeout_seconds',86400): self.add_error('xmltv_source_timeout_seconds','单文件超时不能超过 XMLTV 整批任务超时。')
         import re
         files=['all.xml']
         for key in ('cc_filename','local_filename','overseas_filename'):
@@ -134,11 +163,14 @@ class SettingsForm(RuntimeConfigForm):
 
     def sections(self):
         sections=[('节目单自动抓取', ('auto_crawl','epg_schedule_mode','interval_seconds','epg_interval_unit','epg_schedule_times','crawl_on_start')),
-                  ('频道列表自动抓取', ('auto_catalog','catalog_schedule_mode','catalog_interval_seconds','catalog_interval_unit','catalog_schedule_times','catalog_on_start')),
-                  ('任务超时与统一处理', ('task_timeout_seconds','source_timeout_seconds','split_midnight','fill_programme_gaps'))]
-        result=[{'title':title,'fields':[self[key] for key in fields]} for title,fields in sections]
+                  ('频道列表自动抓取', ('auto_catalog','catalog_schedule_mode','catalog_interval_seconds','catalog_interval_unit','catalog_schedule_times','catalog_on_start','source_timeout_seconds')),
+                  ('XMLTV 来源抓取', ('auto_xmltv','xmltv_schedule_mode','xmltv_interval_seconds','xmltv_interval_unit','xmltv_schedule_times','xmltv_on_start')),
+                  ('任务超时与统一处理', ('task_timeout_seconds','split_midnight','fill_programme_gaps'))]
+        result=[]
+        for title,fields in sections:
+            names=list(fields)+[key for key,_,_,_,group in SPECS if group==title]
+            result.append({'title':title,'fields':[self[key] for key in names]})
         for section in dict.fromkeys(spec[-1] for spec in SPECS):
+            if section in {title for title,_ in sections}: continue
             result.append({'title':section,'fields':[self[key] for key,_,_,_,group in SPECS if group==section]})
         return result
-
-

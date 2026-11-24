@@ -20,16 +20,35 @@ def queue_new_source_catalogs():
     from crawl.source_registry import registry
     from .models import Channel_list, Task
     from .tasks import enqueue
+    from .runtime_config import get_config
+    from .options import options
 
+    config = get_config()
+    opts = options(config)
     sources, _ = registry()
     existing = set(Channel_list.objects.values_list('source', flat=True).distinct())
     pending = list(Task.objects.filter(kind='catalog', status__in=['queued', 'running']))
-    if any(not task.source and not task.params.get('channel_ids') for task in pending):
-        return []  # A queued full refresh already covers the new sources.
-    busy = {task.source for task in pending}
+    full_pending = any(not task.source and not task.params.get('channel_ids') for task in pending)
     created = []
+    if config.auto_catalog and opts['catalog_refresh_on_restart'] and not pending:
+        task, new = enqueue('catalog', params={'startup_refresh': True})
+        if new:
+            task.summary = '已按启动刷新设置排队更新频道目录。'
+            task.save(update_fields=['summary'])
+            created.append(task)
+        full_pending = True
+    if not opts['catalog_bootstrap_new_sources']:
+        return created
+    busy = {task.source for task in pending}
+    # A full refresh may be limited to selected sources. New files outside that
+    # range still get their own first catalogue when bootstrapping is enabled.
+    covered = set(opts['catalog_sources'] or sources) if full_pending else set()
+    attempted = set(Task.objects.filter(kind='catalog', params__startup_catalog=True,
+        status__in=['failed', 'cancelled']).values_list('source', flat=True))
     for source, entry in sources.items():
-        if not entry.external or not entry.channels or source in existing or source in busy:
+        if not entry.external or not entry.channels or source in existing or source in busy or source in covered:
+            continue
+        if not opts['catalog_retry_failed_on_restart'] and source in attempted:
             continue
         task, new = enqueue('catalog', source=source, params={'startup_catalog': True})
         if new:

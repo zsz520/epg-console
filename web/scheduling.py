@@ -28,12 +28,14 @@ def parse_times(value):
 
 
 def spec(config, kind):
-    epg = kind == 'epg'
-    return dict(enabled=config.auto_crawl if epg else config.auto_catalog,
-                mode=config.epg_schedule_mode if epg else config.catalog_schedule_mode,
-                seconds=config.interval_seconds if epg else config.catalog_interval_seconds,
-                times=parse_times(config.epg_schedule_times if epg else config.catalog_schedule_times),
-                on_start=config.crawl_on_start if epg else config.catalog_on_start)
+    enabled, interval, on_start = {
+        'epg': ('auto_crawl', 'interval_seconds', 'crawl_on_start'),
+        'catalog': ('auto_catalog', 'catalog_interval_seconds', 'catalog_on_start'),
+        'xmltv': ('auto_xmltv', 'xmltv_interval_seconds', 'xmltv_on_start'),
+    }[kind]
+    return dict(enabled=getattr(config, enabled), mode=getattr(config, kind + '_schedule_mode'),
+                seconds=getattr(config, interval), times=parse_times(getattr(config, kind + '_schedule_times')),
+                on_start=getattr(config, on_start))
 
 
 def signature(plan):
@@ -69,7 +71,8 @@ def initial_run(plan, now, first, kind):
         return next_daily(now, plan['times'], include_minute=True)
     if first:
         # Preserve the legacy automatic EPG completion anchor on upgrade.
-        latest = Task.objects.filter(kind=kind, source='', requested_by__isnull=True).order_by('-created_at').first()
+        latest = next((task for task in Task.objects.filter(kind=kind, source='', requested_by__isnull=True).order_by('-created_at')
+                       if not task.params.get('feed_ids' if kind=='xmltv' else 'channel_ids')), None)
         if latest:
             return (latest.finished_at or latest.created_at) + datetime.timedelta(seconds=plan['seconds'])
         if plan['on_start']:
@@ -81,7 +84,7 @@ def tick(now=None):
     """Called between jobs and while a child runs, never executes network I/O."""
     now = now or timezone.now()
     config = get_config()
-    for kind in ('epg', 'catalog'):
+    for kind in ('epg', 'catalog', 'xmltv'):
         plan = spec(config, kind)
         fingerprint = signature(plan)
         with transaction.atomic():
@@ -100,7 +103,7 @@ def tick(now=None):
             # A whole-source manual task covers the same work as an automatic
             # one, regardless of creator or parameters. Partial tasks stay separate.
             pending = Task.objects.filter(kind=kind, source='', status__in=['queued', 'running'])
-            pending = any(not t.params.get('channel_ids') for t in pending)
+            pending = any(not t.params.get('feed_ids' if kind == 'xmltv' else 'channel_ids') for t in pending)
             if not pending:
                 Task.objects.create(kind=kind, params={'automatic': True})
             if plan['mode'] == 'daily':
@@ -120,7 +123,7 @@ def tick(now=None):
 
 def completed(task, now=None):
     """Interval schedules wait a full interval after a whole-source job finishes."""
-    if task.kind not in ('epg', 'catalog') or task.source or task.params.get('channel_ids'):
+    if task.kind not in ('epg', 'catalog', 'xmltv') or task.source or task.params.get('channel_ids') or task.params.get('feed_ids'):
         return
     now = now or timezone.now()
     plan = spec(get_config(), task.kind)
@@ -133,12 +136,12 @@ def summaries(config=None, now=None):
     config = config or get_config()
     now = now or timezone.now()
     result = []
-    for kind, label in [('epg', '节目单'), ('catalog', '频道列表')]:
+    for kind, label in [('epg', '节目单'), ('catalog', '频道列表'), ('xmltv', 'XMLTV 来源')]:
         plan = spec(config, kind)
         state = AutoScheduleState.objects.filter(pk=kind).first()
         due = state.next_run if state and matches(state,plan) else None
         pending=next((task for task in Task.objects.filter(kind=kind,source='',status__in=['queued','running']).order_by('pk')
-                      if not task.params.get('channel_ids')),None)
+                      if not task.params.get('feed_ids' if kind == 'xmltv' else 'channel_ids')),None)
         if pending and plan['mode']=='interval': due=None
         result.append({'label': label, 'enabled': plan['enabled'],
                        'pending':pending.get_status_display() if pending else '',

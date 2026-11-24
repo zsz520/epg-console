@@ -1,4 +1,4 @@
-"""Persistent tasks executed by the separate worker container."""
+"""Persistent tasks executed by the locked background worker process."""
 import datetime
 import json
 import os
@@ -17,9 +17,10 @@ DATA = Path(os.getenv('EPG_DATA_DIR', '/data'))
 
 
 def enqueue(kind, source='', user=None, params=None):
-    if kind in ('epg', 'catalog') and not source and not (params or {}).get('channel_ids'):
+    selection_key = 'feed_ids' if kind == 'xmltv' else 'channel_ids'
+    if kind in ('epg', 'catalog', 'xmltv') and not source and not (params or {}).get(selection_key):
         for candidate in Task.objects.filter(kind=kind, source='', status__in=['queued', 'running']).order_by('pk'):
-            if not candidate.params.get('channel_ids'):
+            if not candidate.params.get(selection_key):
                 return candidate, False
     existing = Task.objects.filter(kind=kind, source=source, params=params or {}, status__in=['queued', 'running']).first()
     if existing:
@@ -32,7 +33,10 @@ def heartbeat():
 
 
 def run_job(task, stopping):
-    timeout = get_config().task_timeout_seconds
+    from .options import options
+    config = get_config()
+    opts = options(config)
+    timeout = opts.get(task.kind + '_task_timeout_seconds', config.task_timeout_seconds)
     log_dir = DATA / 'tasks'
     log_dir.mkdir(exist_ok=True)
     with open(log_dir / f'{task.pk}.log', 'a', encoding='utf-8') as log:

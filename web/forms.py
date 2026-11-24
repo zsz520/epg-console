@@ -12,12 +12,17 @@ class RuntimeConfigForm(forms.ModelForm):
     catalog_interval_seconds = forms.IntegerField(label='频道列表间隔数值', min_value=1, max_value=2592000,
         help_text='从上次全量频道列表任务完成后等待；最短 60 秒，最长 30 天。')
     catalog_interval_unit = forms.ChoiceField(label='频道列表间隔单位', choices=UNITS, required=False)
+    xmltv_interval_seconds = forms.IntegerField(label='XMLTV 间隔数值', min_value=1, max_value=2592000,
+        help_text='从上次全量 XMLTV 任务完成后等待；最短 60 秒，最长 30 天。')
+    xmltv_interval_unit = forms.ChoiceField(label='XMLTV 间隔单位', choices=UNITS, required=False)
+    xmltv_schedule_times = forms.CharField(label='XMLTV 每天更新时间', required=False, max_length=1000,
+        widget=forms.Textarea(attrs={'rows': 2, 'placeholder': '05:00,17:00'}))
     epg_schedule_times = forms.CharField(label='节目单每天抓取时间', required=False, max_length=1000,
         widget=forms.Textarea(attrs={'rows': 2, 'placeholder': '06:00,12:30,18:00'}))
     catalog_schedule_times = forms.CharField(label='频道列表每天抓取时间', required=False, max_length=1000,
         widget=forms.Textarea(attrs={'rows': 2, 'placeholder': '04:00,16:00'}))
-    task_timeout_seconds = forms.IntegerField(label='单次任务超时（秒）', min_value=10, max_value=86400,
-        help_text='默认 3600（60 分钟）；对新开始的任务生效。')
+    task_timeout_seconds = forms.IntegerField(label='节目单及其他任务超时（秒）', min_value=10, max_value=86400,
+        help_text='默认 3600（60 分钟）；频道目录和独立 XMLTV 更新使用各自的整批任务超时。')
     source_timeout_seconds = forms.IntegerField(label='单个来源目录超时（秒）', min_value=5, max_value=3600,
         help_text='默认 120；对新开始的频道目录任务生效。')
 
@@ -25,15 +30,18 @@ class RuntimeConfigForm(forms.ModelForm):
         model = RuntimeConfig
         fields = ('auto_crawl', 'epg_schedule_mode', 'interval_seconds', 'epg_schedule_times', 'crawl_on_start',
                   'auto_catalog', 'catalog_schedule_mode', 'catalog_interval_seconds', 'catalog_schedule_times', 'catalog_on_start',
+                  'auto_xmltv', 'xmltv_schedule_mode', 'xmltv_interval_seconds', 'xmltv_schedule_times', 'xmltv_on_start',
                   'task_timeout_seconds', 'source_timeout_seconds')
         help_texts = {'auto_crawl': '关闭后仍可手动提交任务；正在执行的任务会继续。',
                       'crawl_on_start': '仅间隔模式、尚无自动调度记录时生效；每天定时模式按时间点执行。',
-                      'auto_catalog': '自动更新所有已注册来源的频道目录，失败保留原目录；不会自动向频道列表新增频道。关闭后仍可手动提交任务。',
+                      'auto_catalog': '按计划更新下方选定范围的来源目录；失败保留原目录，不会自动新增管理频道。新来源首次抓取由独立开关控制。',
+                      'auto_xmltv': '独立计划只下载 XML/XML.GZ 来源并更新其频道目录与本地节目快照；节目入库与合并导出仍由节目单任务完成。',
+                      'xmltv_on_start': '仅间隔模式首次启用生效；每天定时模式按配置时间执行。',
                       'catalog_on_start': '仅间隔模式首次启用生效；未勾选时先等待一个间隔。'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for prefix, seconds_key in [('epg', 'interval_seconds'), ('catalog', 'catalog_interval_seconds')]:
+        for prefix, seconds_key in [('epg', 'interval_seconds'), ('catalog', 'catalog_interval_seconds'), ('xmltv', 'xmltv_interval_seconds')]:
             self.fields[prefix + '_schedule_times'].help_text = '北京时间（24 小时制）；多个时间可用逗号、空格或换行分隔，每天最多 48 个。'
             if not self.is_bound:
                 seconds = getattr(self.instance, seconds_key)
@@ -50,11 +58,15 @@ class RuntimeConfigForm(forms.ModelForm):
         data = super().clean()
         from .scheduling import parse_times
         full = self.data.get('_settings_full') == '1'
+        modern = self.data.get('_settings_version') == '2'
         for key in ('auto_catalog', 'catalog_on_start', 'epg_schedule_mode', 'catalog_schedule_mode',
-                    'epg_schedule_times', 'catalog_schedule_times'):
-            if key not in self.data and (not full or key not in ('auto_catalog', 'catalog_on_start')):
+                    'epg_schedule_times', 'catalog_schedule_times', 'auto_xmltv', 'xmltv_on_start',
+                    'xmltv_schedule_mode', 'xmltv_schedule_times'):
+            boolean = key in ('auto_catalog', 'catalog_on_start', 'auto_xmltv', 'xmltv_on_start')
+            preserve = not full or not boolean or (key.startswith(('auto_xmltv', 'xmltv_')) and not modern)
+            if key not in self.data and preserve:
                 data[key] = getattr(self.instance, key)
-        for prefix, seconds_key in [('epg', 'interval_seconds'), ('catalog', 'catalog_interval_seconds')]:
+        for prefix, seconds_key in [('epg', 'interval_seconds'), ('catalog', 'catalog_interval_seconds'), ('xmltv', 'xmltv_interval_seconds')]:
             value = data.get(seconds_key)
             if seconds_key not in self.data:
                 data[seconds_key] = getattr(self.instance, seconds_key)
@@ -72,8 +84,6 @@ class RuntimeConfigForm(forms.ModelForm):
                 data[key] = ','.join(times)
             except ValueError as exc:
                 self.add_error(key, str(exc))
-        if data.get('source_timeout_seconds', 0) > data.get('task_timeout_seconds', 86400):
-            self.add_error('source_timeout_seconds', '单来源超时不能超过单次任务超时。')
         return data
 
 

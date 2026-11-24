@@ -1,5 +1,10 @@
 """Typed, public runtime knobs. Deployment/security settings remain in Compose."""
 DEFAULTS = {
+    'catalog_bootstrap_new_sources':True, 'catalog_refresh_on_restart':False,
+    'catalog_retry_failed_on_restart':True, 'catalog_sources':[],
+    'catalog_retries':1, 'catalog_retry_delay_seconds':1, 'catalog_task_timeout_seconds':3600,
+    'xmltv_with_epg':True, 'xmltv_with_catalog':True,
+    'xmltv_source_timeout_seconds':120, 'xmltv_task_timeout_seconds':3600,
     'auto_retry_failures':False,'failure_retry_minutes':30,'failure_retry_rounds':3,
     'quality_check':False,'quality_min_percent':50,'quality_min_old_count':10,'quality_gap_minutes':0,
     'auto_backup':False,'backup_hour':4,'backup_keep':5,
