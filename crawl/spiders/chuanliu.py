@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import requests, datetime, os
-from .chuanliu_defaults import DEFAULT_AUTHORIZATION
+# 默认授权集中在本文件；仍可通过 CHUANLIU_AUTHORIZATION 环境变量覆盖。
+DEFAULT_AUTHORIZATION = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI5ODQwODlhNjc1OGU0ZjJlOTViMjk4NWM4YjA1MDNmYiIsImNvbXBhbnkiOiJxaXlpIiwibmFtZSI6InRlcm1pbmFsIn0.1gDPpBcHJIE8dLiq7UekUlPWMtJOYymI8zoIYlsVgc4'
 
 def authorization_headers():
     value = (os.getenv('CHUANLIU_AUTHORIZATION') or DEFAULT_AUTHORIZATION).strip()
