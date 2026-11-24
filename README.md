@@ -4,7 +4,7 @@
 
 ## 部署
 
-使用 [compose.yaml](compose.yaml) 启动，镜像支持 Linux amd64。
+使用 [compose.yaml](compose.yaml) 启动，自动构建 Linux amd64 / arm64 镜像。
 
 ```sh
 docker compose pull
@@ -31,3 +31,8 @@ IPv6 来源沿用宿主机已有的 IPv6 路由和 NAT 配置。
 ## 升级
 
 备份 `data` 后执行上面的两条部署命令，浏览器强制刷新即可。已有账号、设置和来源文件保留。
+
+## 自动构建
+
+GitHub Actions 在主分支代码更新时发布 `latest`，推送 `v2.12` 等版本标签时发布 `2.12`；也可手动运行。
+仓库需配置 Secret `DOCKERHUB_TOKEN`（Docker Hub 读写 Access Token）。未配置时只构建，不推送；PR 也只构建。

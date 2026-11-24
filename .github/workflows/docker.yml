@@ -1,0 +1,97 @@
+name: Docker amd64 + arm64
+
+on:
+  push:
+    branches: [main]
+    tags: ['v[0-9]*', '[0-9]*']
+    paths-ignore: ['**/*.md', LICENSE]
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**/*.md', LICENSE]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: zsz520/epg-console
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Check publishing credentials
+        id: publish
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          if [[ "$EVENT_NAME" != "pull_request" && -n "$DOCKERHUB_TOKEN" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            if [[ "$EVENT_NAME" != "pull_request" ]]; then
+              echo "::warning::DOCKERHUB_TOKEN is missing. Both architectures will build, but no image will be pushed."
+              echo "Add repository Secret DOCKERHUB_TOKEN, then rerun this workflow to publish." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=match,pattern=^v?([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:[-.][A-Za-z0-9.-]+)?)$,group=1
+            type=sha,prefix=sha-
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
+        with:
+          platforms: arm64
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Login to Docker Hub
+        if: steps.publish.outputs.enabled == 'true'
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          username: zsz520
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build both architectures
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.publish.outputs.enabled == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=epg-console
+          cache-to: type=gha,mode=max,scope=epg-console
+
+      - name: Verify published platforms
+        if: steps.publish.outputs.enabled == 'true'
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          docker buildx imagetools inspect "$IMAGE_NAME@$IMAGE_DIGEST" --raw > /tmp/epg-manifest.json
+          jq -e 'any(.manifests[]; .platform.os == "linux" and .platform.architecture == "amd64") and any(.manifests[]; .platform.os == "linux" and .platform.architecture == "arm64")' /tmp/epg-manifest.json
+          echo "Published linux/amd64 + linux/arm64: $IMAGE_NAME@$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"
