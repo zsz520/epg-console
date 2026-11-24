@@ -1,0 +1,1102 @@
+[
+  {
+    "model": "web.channel",
+    "pk": 1,
+    "fields": {
+      "channel_id": "<cctv:cctv1><tvmao:CCTV-CCTV1><tvsou:b3666b9d#yangshi><nowtv:G05-541><chuanliu:3342>",
+      "tvg_name": "CCTV1",
+      "name": "CCTV-1综合",
+      "sort": "央视",
+      "logo": "",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": null,
+      "tvg_id": "CCTV1"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 2,
+    "fields": {
+      "channel_id": "<cctv:cctv2><tvmao:CCTV-CCTV2><tvsou:c5717c2d#yangshi><chuanliu:3351>",
+      "tvg_name": "CCTV2",
+      "name": "CCTV-2财经",
+      "sort": "央视",
+      "logo": "",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(2(\\\\D|$)|2??财经)",
+      "tvg_id": "CCTV2"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 3,
+    "fields": {
+      "channel_id": "<cctv:cctv3><tvmao:CCTV-CCTV3><tvsou:53eda06f#yangshi><chuanliu:3353>",
+      "tvg_name": "CCTV3",
+      "name": "CCTV-3综艺",
+      "sort": "央视",
+      "logo": "",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(3|综艺)",
+      "tvg_id": "CCTV3"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 4,
+    "fields": {
+      "channel_id": "<cctv:cctv4><tvmao:CCTV-CCTV4><tvsou:0ccc41bf#yangshi><nowtv:G05-542><chuanliu:3355>",
+      "tvg_name": "CCTV4",
+      "name": "CCTV-4中文国际",
+      "sort": "央视",
+      "logo": "",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(4$|4[^k]|中文)",
+      "tvg_id": "CCTV4"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 5,
+    "fields": {
+      "channel_id": "<cctv:cctv5><tvmao:CCTV-CCTV5><tvsou:6b26bee1#yangshi><chuanliu:3359>",
+      "tvg_name": "CCTV5",
+      "name": "CCTV-5体育",
+      "sort": "央视",
+      "logo": "",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)5?($|体育$|体育频道|高清)",
+      "tvg_id": "CCTV5"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 6,
+    "fields": {
+      "channel_id": "<chuanliu:3358><cctv:cctv5plus><tvmao:CCTV-CCTV5-PLUS><tvsou:e4e3801d#yangshi>",
+      "tvg_name": "CCTV5+",
+      "name": "CCTV-5+体育赛事",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV5+.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(5(\\\\+|plus)|体育赛事)",
+      "tvg_id": "CCTV5+"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 7,
+    "fields": {
+      "channel_id": "<chuanliu:3361><cctv:cctv6><tvmao:CCTV-CCTV6><tvsou:ddb707c0#yangshi>",
+      "tvg_name": "CCTV6",
+      "name": "CCTV-6电影",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV6.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(6|电影)",
+      "tvg_id": "CCTV6"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 8,
+    "fields": {
+      "channel_id": "<chuanliu:3363><cctv:cctv7><tvmao:CCTV-CCTV7><tvsou:f2d13f2a#yangshi>",
+      "tvg_name": "CCTV7",
+      "name": "CCTV-7国防军事",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV7.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(7|(国防|军事))",
+      "tvg_id": "CCTV7"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 9,
+    "fields": {
+      "channel_id": "<chuanliu:3365><cctv:cctv8><tvmao:CCTV-CCTV8><tvsou:13e8f054#yangshi>",
+      "tvg_name": "CCTV8",
+      "name": "CCTV-8电视剧",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV8.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(8|电视)",
+      "tvg_id": "CCTV8"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 10,
+    "fields": {
+      "channel_id": "<chuanliu:3367><cctv:cctvjilu><tvmao:CCTV-CCTV9><tvsou:8f932b7b#yangshi>",
+      "tvg_name": "CCTV9",
+      "name": "CCTV-9纪录",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV9.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(9|记录)",
+      "tvg_id": "CCTV9"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 11,
+    "fields": {
+      "channel_id": "<chuanliu:3344><cctv:cctv10><tvmao:CCTV-CCTV10><tvsou:CCTV-10#yangshi>",
+      "tvg_name": "CCTV10",
+      "name": "CCTV-10科教",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV10.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(10|科教)",
+      "tvg_id": "CCTV10"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 12,
+    "fields": {
+      "channel_id": "<chuanliu:3345><cctv:cctv11><tvmao:CCTV-CCTV11><tvsou:0a2de840#yangshi>",
+      "tvg_name": "CCTV11",
+      "name": "CCTV-11戏曲",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV11.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(11|戏曲)",
+      "tvg_id": "CCTV11"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 13,
+    "fields": {
+      "channel_id": "<chuanliu:3348><cctv:cctv12><tvmao:CCTV-CCTV12><tvsou:1e983148#yangshi>",
+      "tvg_name": "CCTV12",
+      "name": "CCTV-12社会与法",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV12.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(12|社会)",
+      "tvg_id": "CCTV12"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 14,
+    "fields": {
+      "channel_id": "<chuanliu:3369><cctv:cctv13><tvmao:CCTV-CCTV13><tvsou:f5b1a323#yangshi>",
+      "tvg_name": "CCTV13",
+      "name": "CCTV-13新闻",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV13.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(13|新闻)",
+      "tvg_id": "CCTV13"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 15,
+    "fields": {
+      "channel_id": "<chuanliu:3371><cctv:cctvchild><tvmao:CCTV-CCTV15><tvsou:6fff4f43#yangshi>",
+      "tvg_name": "CCTV14",
+      "name": "CCTV-14少儿",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV14.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(14|少儿)",
+      "tvg_id": "CCTV14"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 16,
+    "fields": {
+      "channel_id": "<chuanliu:3368><cctv:cctv15><tvmao:CCTV-CCTV16><tvsou:3201ff16#yangshi>",
+      "tvg_name": "CCTV15",
+      "name": "CCTV-15音乐",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV15.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(15|音乐)",
+      "tvg_id": "CCTV15"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 17,
+    "fields": {
+      "channel_id": "<cctv:cctv17><tvmao:CCTV-CCTV17>",
+      "tvg_name": "CCTV17",
+      "name": "CCTV-17农村农业",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/CCTV17.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cctv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(cctv|央视)(17|(农村|农业))",
+      "tvg_id": "CCTV17"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 20,
+    "fields": {
+      "channel_id": "<chuanliu:3864><cabletv:id=1&cid=15><icable:129>",
+      "tvg_name": "CGTN",
+      "name": "CGTN",
+      "sort": "央视",
+      "logo": "http://epg.51zmt.top:8000/tb1/CCTV/cgtn.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "cabletv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "cgtn($|[^d中])|中国国际电视",
+      "tvg_id": "CGTN"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 28,
+    "fields": {
+      "channel_id": "<chuanliu:3589><tvsou:ZJTV-1#weishi><tvmao:ZJTV-ZJTV1><nowtv:G05-555><icable:335>",
+      "tvg_name": "浙江卫视",
+      "name": "浙江卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/zhejiang.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "浙江卫视",
+      "tvg_id": "浙江卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 29,
+    "fields": {
+      "channel_id": "<chuanliu:3458><tvsou:JSTV-1#weishi><tvmao:JSTV-JSTV1>",
+      "tvg_name": "江苏卫视",
+      "name": "江苏卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/jiangsu.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "江苏卫视",
+      "tvg_id": "江苏卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 30,
+    "fields": {
+      "channel_id": "<chuanliu:3338><tvsou:696f2203#weishi><tvmao:BTV-BTV1><tianyi:00000110240129>",
+      "tvg_name": "北京卫视",
+      "name": "北京卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/beijing.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "北京卫视",
+      "tvg_id": "北京卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 31,
+    "fields": {
+      "channel_id": "<chuanliu:3521><tvsou:SMG#weishi><tvmao:SHHAI-DONGFANG1><icable:334>",
+      "tvg_name": "东方卫视",
+      "name": "东方卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/dongfang.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "东方卫视",
+      "tvg_id": "东方卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 32,
+    "fields": {
+      "channel_id": "<chuanliu:3327><tvsou:AHTV-1#weishi><tvmao:AHTV-AHTV1>",
+      "tvg_name": "安徽卫视",
+      "name": "安徽卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/anhui.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "安徽卫视",
+      "tvg_id": "安徽卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 33,
+    "fields": {
+      "channel_id": "<chuanliu:3415><tvsou:GDTV-1#weishi><tvmao:GDTV-GDTV1><gdtv:1>",
+      "tvg_name": "广东卫视",
+      "name": "广东卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/guangdong.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "gdtv",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "广东卫视",
+      "tvg_id": "广东卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 34,
+    "fields": {
+      "channel_id": "<chuanliu:3556><tvsou:SHENZHENTV-1#weishi><tvmao:SZTV-SZTV1><nowtv:G05-540>",
+      "tvg_name": "深圳卫视",
+      "name": "深圳卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/shenzhen.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "深圳卫视",
+      "tvg_id": "深圳卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 36,
+    "fields": {
+      "channel_id": "<chuanliu:3471><tvsou:LNTV-1#weishi><tvmao:LNTV-LNTV1>",
+      "tvg_name": "辽宁卫视",
+      "name": "辽宁卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/liaoning.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "辽宁卫视",
+      "tvg_id": "辽宁卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 37,
+    "fields": {
+      "channel_id": "<chuanliu:3428><tvmao:TCTC-TCTC1>",
+      "tvg_name": "旅游卫视",
+      "name": "海南卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/lvyou.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "旅游卫视|海南卫视",
+      "tvg_id": "旅游卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 38,
+    "fields": {
+      "channel_id": "<chuanliu:3514><tvsou:SDTV-1#weishi><tvmao:SDTV-SDTV1>",
+      "tvg_name": "山东卫视",
+      "name": "山东卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/shandong.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "山东卫视",
+      "tvg_id": "山东卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 39,
+    "fields": {
+      "channel_id": "<chuanliu:3558><tvsou:TJTV-1#weishi><tvmao:TJTV-TJTV1>",
+      "tvg_name": "天津卫视",
+      "name": "天津卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/tianjin.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "天津卫视",
+      "tvg_id": "天津卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 40,
+    "fields": {
+      "channel_id": "<chuanliu:3399><tvsou:CQTV-1#weishi><tvmao:CCQTV-CCQTV1>",
+      "tvg_name": "重庆卫视",
+      "name": "重庆卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/chongqing.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "重庆卫视",
+      "tvg_id": "重庆卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 41,
+    "fields": {
+      "channel_id": "<chuanliu:3410><tvsou:DNWS#weishi><tvmao:FJTV-FJTV2>",
+      "tvg_name": "东南卫视",
+      "name": "东南卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/dongnan.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "东南卫视",
+      "tvg_id": "东南卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 42,
+    "fields": {
+      "channel_id": "<chuanliu:3421><tvsou:GSTV-1#weishi><tvmao:GSTV-GSTV1>",
+      "tvg_name": "甘肃卫视",
+      "name": "甘肃卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/gansu.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "甘肃卫视",
+      "tvg_id": "甘肃卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 43,
+    "fields": {
+      "channel_id": "<chuanliu:3424><tvsou:GXTV--1#weishi><tvmao:GUANXI-GUANXI1>",
+      "tvg_name": "广西卫视",
+      "name": "广西卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/guangxi.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "广西卫视",
+      "tvg_id": "广西卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 44,
+    "fields": {
+      "channel_id": "<chuanliu:3426><tvsou:GZTV-1#weishi><tvmao:GUIZOUTV-GUIZOUTV1>",
+      "tvg_name": "贵州卫视",
+      "name": "贵州卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/guizhou.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "贵州卫视",
+      "tvg_id": "贵州卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 45,
+    "fields": {
+      "channel_id": "<tvsou:HEBTV-1#weishi><tvmao:HEBEI-HEBEI1>",
+      "tvg_name": "河北卫视",
+      "name": "河北卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/hebei.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "河北卫视",
+      "tvg_id": "河北卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 46,
+    "fields": {
+      "channel_id": "<chuanliu:3436><tvsou:HLJTV-1#weishi><tvmao:HLJTV-HLJTV1>",
+      "tvg_name": "黑龙江卫视",
+      "name": "黑龙江卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/heilongjiang.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "黑龙江卫视",
+      "tvg_id": "黑龙江卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 47,
+    "fields": {
+      "channel_id": "<chuanliu:3431><tvsou:HENANTV-1#weishi><tvmao:HNTV-HNTV1><",
+      "tvg_name": "河南卫视",
+      "name": "河南卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/henan.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "河南卫视",
+      "tvg_id": "河南卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 48,
+    "fields": {
+      "channel_id": "<chuanliu:3439><tvsou:526cbae7#weishi><tvmao:HUBEI-HUBEI1><icable:337>",
+      "tvg_name": "湖北卫视",
+      "name": "湖北卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/hubei.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "湖北卫视",
+      "tvg_id": "湖北卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 50,
+    "fields": {
+      "channel_id": "<chuanliu:3467><tvsou:JXTV-1#weishi><tvmao:JXTV-JXTV1>",
+      "tvg_name": "江西卫视",
+      "name": "江西卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/jiangxi.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "江西卫视",
+      "tvg_id": "江西卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 51,
+    "fields": {
+      "channel_id": "<chuanliu:3451><tvsou:JLTV-1#weishi><tvmao:JILIN-JILIN1>",
+      "tvg_name": "吉林卫视",
+      "name": "吉林卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/jilin.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "吉林卫视",
+      "tvg_id": "吉林卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 52,
+    "fields": {
+      "channel_id": "<chuanliu:3476><tvsou:NMGTV-1#weishi><tvmao:NMGTV-NMGTV1>",
+      "tvg_name": "内蒙古卫视",
+      "name": "内蒙古卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/neimeng.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "内蒙古??卫视",
+      "tvg_id": "内蒙古卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 53,
+    "fields": {
+      "channel_id": "<tvsou:NXTV-1#weishi><tvmao:NXTV-NXTV2>",
+      "tvg_name": "宁夏卫视",
+      "name": "宁夏卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/ningxia.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "宁夏卫视",
+      "tvg_id": "宁夏卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 54,
+    "fields": {
+      "channel_id": "<chuanliu:3551><tvsou:SHANXITV-1#weishi><tvmao:SXTV-SXTV1>",
+      "tvg_name": "山西卫视",
+      "name": "山西卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/shanxi_.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "山西卫视",
+      "tvg_id": "山西卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 55,
+    "fields": {
+      "channel_id": "<chuanliu:3515><tvsou:SXTV-1#weishi><tvmao:SHXITV-SHXITV1>",
+      "tvg_name": "陕西卫视",
+      "name": "陕西卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/shanxi.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "陕西卫视",
+      "tvg_id": "陕西卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 58,
+    "fields": {
+      "channel_id": "<chuanliu:3582><tvsou:3a19b822#weishi><tvmao:YNTV-YNTV1>",
+      "tvg_name": "云南卫视",
+      "name": "云南卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/yunnan.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "云南卫视",
+      "tvg_id": "云南卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 63,
+    "fields": {
+      "channel_id": "<tvsou:YANBIANTV-1#weishi><tvmao:YANBIAN-YANBIAN1>",
+      "tvg_name": "延边卫视",
+      "name": "延边卫视",
+      "sort": "上海",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/YANBIAN1.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "延边卫视",
+      "tvg_id": "延边卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 65,
+    "fields": {
+      "channel_id": "<tvsou:HHWS#weishi><tvmao:CYRTV-HHWS>",
+      "tvg_name": "黄河卫视",
+      "name": "黄河卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/huanghe.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "黄河卫视",
+      "tvg_id": "黄河卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 67,
+    "fields": {
+      "channel_id": "<chuanliu:3339><tvmao:BTV-BTV10><tvsou:648e72a2#beijing-110000><btv:142>",
+      "tvg_name": "卡酷动画",
+      "name": "卡酷动画",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/qt/kaku.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "chuanliu",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "卡酷(动画|少儿)",
+      "tvg_id": "卡酷动画"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 68,
+    "fields": {
+      "channel_id": "<tvsou:XIAMENTV-1#weishi><tvmao:XMTV-XMTV5>",
+      "tvg_name": "厦门卫视",
+      "name": "厦门卫视",
+      "sort": "北京",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/xiamen.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "厦门卫视",
+      "tvg_id": "厦门卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 69,
+    "fields": {
+      "channel_id": "<chuanliu:3446><tvsou:bc0c3927#hunan-430000><tvmao:HUNANTV-HUNANTV2><tvsou:bc0c3927#hunan-430000>",
+      "tvg_name": "金鹰卡通",
+      "name": "金鹰卡通",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/qt/jinyingkatong.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "(湖南)??金鹰卡通",
+      "tvg_id": "金鹰卡通"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 70,
+    "fields": {
+      "channel_id": "<chuanliu:3494><tvsou:5ccb1172#weishi><tvmao:SCTV-KAMBA-TV><tvsou:KBWS#sichuan-510000>",
+      "tvg_name": "康巴卫视",
+      "name": "康巴卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/kangba.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "康巴卫视",
+      "tvg_id": "康巴卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 71,
+    "fields": {
+      "channel_id": "<chuanliu:3580><tvsou:XZTV-1#weishi><tvmao:XIZANGTV-XIZANGTV2>",
+      "tvg_name": "西藏卫视",
+      "name": "西藏卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/xizang.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "chuanliu",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "西藏卫视",
+      "tvg_id": "西藏卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 72,
+    "fields": {
+      "channel_id": "<tvsou:ssws#weishi><tvmao:SSTV-SANSHATV><nowtv:G05-553>",
+      "tvg_name": "三沙卫视",
+      "name": "三沙卫视",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/ws/sansha.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "tvmao",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "三沙卫视",
+      "tvg_id": "三沙卫视"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 73,
+    "fields": {
+      "channel_id": "<chuanliu:3393><tvmao:CETV-CETV1><tvsou:5a44bb16#yangshi>",
+      "tvg_name": "中国教育1台",
+      "name": "教育1台",
+      "sort": "卫视",
+      "logo": "http://epg.51zmt.top:8000/tb1/qt/中国教育1台.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "chuanliu",
+      "recrawl": 1,
+      "remark": null,
+      "patten": "^(中国)??教育(电视台)??(1|一)",
+      "tvg_id": "中国教育1台"
+    }
+  },
+  {
+    "model": "web.channel",
+    "pk": 74,
+    "fields": {
+      "channel_id": "<chuanliu:3394><tvmao:CETV-CETV2><tvsou:e04d023a#yangshi>",
+      "tvg_name": "中国教育2台",
+      "name": "教育2台",
+      "sort": "数字付费",
+      "logo": "http://epg.51zmt.top:8000/tb1/qt/中国教育2台.png",
+      "last_program_date": "2000-01-01",
+      "descr": null,
+      "has_epg": 1,
+      "ineed": 1,
+      "source": "chuanliu",
+      "recrawl": 0,
+      "remark": null,
+      "patten": "^(中国)??教育(电视台)??(2|二)",
+      "tvg_id": "中国教育2台"
+    }
+  }
+]
