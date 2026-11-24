@@ -226,7 +226,7 @@ class ConsoleSite(AdminSite):
             return HttpResponseNotAllowed(['POST'])
         self.require(request, 'web.view_channel', 'web.view_channel_list')
         import json
-        from .catalog import parse_mapping
+        from .catalog import parse_mapping_entries
         from .preview import preview, resolve_date
         try:
             data = json.loads(request.body)
@@ -247,9 +247,10 @@ class ConsoleSite(AdminSite):
             else:
                 channel = get_object_or_404(Channel, pk=int(data['channel_id']))
                 source = data.get('source')
-                identifier = parse_mapping(channel.channel_id).get(source)
+                matches = [value for key, value in parse_mapping_entries(channel.channel_id) if key == source]
+                identifier = data.get('identifier') or (matches[0] if matches else None)
                 name = channel.name
-                if not identifier:
+                if not identifier or identifier not in matches:
                     raise ValueError
             if source not in SOURCE_NAMES:
                 raise ValueError

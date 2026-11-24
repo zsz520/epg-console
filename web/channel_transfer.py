@@ -14,7 +14,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from .models import Channel
 from .ordering import ordered_channels
-from .catalog import parse_mapping
+from .catalog import parse_mapping_entries
 
 FIELDS=('tvg_id','name','tvg_name','sort','sort_order','logo','source','channel_id','has_epg','ineed','recrawl','descr','remark','patten')
 HEADERS=('id','original_tvg_id')+FIELDS+('_escaped',)
@@ -113,9 +113,9 @@ def validate_rows(rows,mode):
             channel.name=channel.name or channel.tvg_name
             channel.tvg_name=channel.tvg_name or channel.name
             channel.sort=channel.sort or '其他'
-            mapping=parse_mapping(channel.channel_id)
-            if not mapping or any(not value for value in mapping.values()):raise ValueError('请填写有效来源 ID。')
-            channel.source=channel.source or next(iter(mapping))
+            mapping=parse_mapping_entries(channel.channel_id)
+            if not mapping or any(not value for _,value in mapping):raise ValueError('请填写有效来源 ID。')
+            channel.source=channel.source or mapping[0][0]
             from crawl.source_registry import get_source_names
             if channel.source not in get_source_names():
                 raise ValueError(f'主来源 {channel.source} 未安装或已移除；请先放入对应来源文件并重启，或在导入文件中改选有效来源。')

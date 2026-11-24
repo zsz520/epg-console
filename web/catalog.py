@@ -63,36 +63,64 @@ def name_key(value):
     return re.sub(r'\s+', '', unicodedata.normalize('NFKC', cht_to_chs(value or ''))).casefold()
 
 
-def parse_mapping(value):
-    result = {}
+def mapping_key(source, identifier):
+    if source == 'xmltv':
+        if not re.fullmatch(r'[1-9]\d*:[A-Za-z0-9_+/-]+={0,2}', identifier):
+            raise ValidationError('XMLTV ID 格式应为 来源编号:频道编码，请从来源目录选择。')
+        return source, identifier.split(':', 1)[0]
+    return source, ''
+
+
+def parse_mapping_entries(value):
+    result, seen = [], {}
     remaining = (value or '').strip()
     for match in re.finditer(r'<([\w]+):([^<>]+)>', remaining):
         source, identifier = match.groups()
-        if source in result and result[source] != identifier:
-            raise ValidationError(f'{SOURCE_NAMES.get(source, source)} 存在不同 ID，请只保留一个。')
-        result[source] = identifier.strip()
+        identifier = identifier.strip()
+        if not identifier:
+            raise ValidationError('来源 ID 不能为空。')
+        key = mapping_key(source, identifier)
+        if key in seen:
+            if seen[key] != identifier:
+                raise ValidationError(f'{SOURCE_NAMES.get(source, source)} 的同一来源文件存在不同频道 ID，请只保留一个。' if source=='xmltv' else f'{SOURCE_NAMES.get(source, source)} 存在不同 ID，请只保留一个。')
+            continue
+        seen[key] = identifier
+        result.append((source, identifier))
     if re.sub(r'<([\w]+):([^<>]+)>', '', remaining).strip():
         raise ValidationError('来源 ID 格式应为 <来源:ID>，多个来源连续填写。')
     return result
 
 
+def parse_mapping(value):
+    """Compatibility view for callers needing one ID per provider; first wins."""
+    result = {}
+    for source, identifier in parse_mapping_entries(value):
+        result.setdefault(source, identifier)
+    return result
+
+
 def mapping_text(mapping):
-    text = ''.join(f'<{source}:{identifier}>' for source, identifier in mapping.items())
+    pairs = mapping.items() if hasattr(mapping, 'items') else mapping
+    text = ''.join(f'<{source}:{identifier}>' for source, identifier in pairs)
     if len(text) > 300:
         raise ValidationError('合并后的来源 ID 超过 300 字符，请减少来源数量。')
     return text
 
 
 def combine(mapping, rows):
-    merged = dict(mapping)
+    merged = list(mapping.items() if hasattr(mapping, 'items') else mapping)
+    existing = {mapping_key(source, identifier): identifier for source, identifier in merged}
     for row in rows:
         if row.source not in SOURCE_NAMES:
             raise ValidationError(f'不支持来源：{row.source}')
         if not row.is_alive:
             raise ValidationError(f'{row.out_name} 的 {row.source} 条目已失效，请先刷新列表。')
-        if row.source in merged and merged[row.source] != row.out_channel_id:
+        key = mapping_key(row.source, row.out_channel_id)
+        if key in existing and existing[key] != row.out_channel_id:
             raise ValidationError(f'{row.out_name}：同一来源 {row.source} 有不同 ID，请分开导入或手动确认。')
-        merged[row.source] = row.out_channel_id
+        if key not in existing:
+            merged.append((row.source, row.out_channel_id))
+            existing[key] = row.out_channel_id
     mapping_text(merged)
     return merged
 
@@ -152,10 +180,10 @@ def import_catalog(ids, target_id=None):
                 matches = []
                 for candidate in channels:
                     try:
-                        known = parse_mapping(candidate.channel_id)
+                        known = parse_mapping_entries(candidate.channel_id)
                     except ValidationError:
-                        known = {}
-                    same_id = any(known.get(row.source) == row.out_channel_id for row in group)
+                        known = []
+                    same_id = any((row.source, row.out_channel_id) in known for row in group)
                     if same_id or key in (name_key(candidate.name), name_key(candidate.tvg_name)):
                         matches.append(candidate)
             if len(matches) > 1:
@@ -165,10 +193,10 @@ def import_catalog(ids, target_id=None):
                 sort=group[0].category or '其他', logo=group[0].logo or '',
                 last_program_date=datetime.date(2000, 1, 1), has_epg=1, ineed=1,
             )
-            mapping = combine(parse_mapping(channel.channel_id), group)
+            mapping = combine(parse_mapping_entries(channel.channel_id), group)
             channel.channel_id = mapping_text(mapping)
             if not channel.source:
-                channel.source = next(iter(mapping))
+                channel.source = mapping[0][0]
             channel.full_clean()
             channel.save()
             Channel_list.objects.filter(pk__in=[r.pk for r in group]).update(

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Channel, Channel_list, RuntimeConfig
-from .catalog import combine, parse_mapping, mapping_text, SOURCE_NAMES
+from .catalog import combine, parse_mapping, parse_mapping_entries, mapping_text, SOURCE_NAMES
 
 
 class RuntimeConfigForm(forms.ModelForm):
@@ -153,13 +153,16 @@ class CatalogPicker(forms.Widget):
         today=timezone.localdate()
         context.update(preview_date=today.isoformat(),preview_min=(today-datetime.timedelta(days=7)).isoformat(),preview_max=(today+datetime.timedelta(days=7)).isoformat())
         context['sources'] = SOURCE_NAMES.items()
+        from .models import XmltvFeed
+        import json
+        context['xmltv_feeds_json'] = json.dumps(dict((str(pk), name) for pk, name in XmltvFeed.objects.values_list('pk', 'name')), ensure_ascii=False)
         context['original_mapping'] = self.attrs.get('data-original-mapping', '')
         context['channel_pk'] = self.attrs.get('data-channel-pk', '')
         context['search_name'] = self.attrs.get('data-search-name', '')
         return context
 
     class Media:
-        js = ['console/catalog-picker.js', 'console/source-preview.js']
+        js = ['console/source-mapping.js', 'console/catalog-picker.js', 'console/source-preview.js']
 
 
 class ChannelForm(forms.ModelForm):
@@ -173,7 +176,7 @@ class ChannelForm(forms.ModelForm):
     catalog_entries = forms.ModelMultipleChoiceField(
         label='从来源目录选择', queryset=Channel_list.objects.filter(is_alive=True),
         required=False, widget=CatalogPicker,
-        help_text='搜索网站上的频道名称，可选择多个来源；自动生成来源 ID。已有来源不会被静默覆盖。')
+        help_text='可选择多个来源和不同 XMLTV 文件；按标签顺序抓取。相同脚本来源或同一 XMLTV 文件的不同频道 ID 需确认替换。')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -198,10 +201,10 @@ class ChannelForm(forms.ModelForm):
         cleaned = super().clean()
         rows = list(cleaned.get('catalog_entries') or [])
         try:
-            mapping = combine(parse_mapping(cleaned.get('channel_id', '')), rows)
+            mapping = combine(parse_mapping_entries(cleaned.get('channel_id', '')), rows)
             cleaned['channel_id'] = mapping_text(mapping)
             if not cleaned.get('source') and mapping:
-                cleaned['source'] = next(iter(mapping))
+                cleaned['source'] = mapping[0][0]
         except ValidationError as exc:
             self.add_error('catalog_entries', exc)
         return cleaned

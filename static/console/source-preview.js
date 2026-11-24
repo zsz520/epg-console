@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cards = root.querySelector('.source-preview-cards');
     const notice = root.querySelector('.comparison-notice');
     const names = new Map([...root.querySelector('.catalog-source').options].map(o => [o.value,o.text]));
-    const parse = text => new Map([...text.matchAll(/<(\w+):([^<>]+)>/g)].map(m => [m[1],m[2]]));
+    const M = window.EpgSourceMapping;
+    const parse = text => {try {return M.parse(text);} catch {return new Map();}};
     const original = parse(root.dataset.originalMapping || '');
     const elements = new Map();
     const customTargets = new Map();
@@ -28,31 +29,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (customTargets.has(source + ':' + identifier)) return customTargets.get(source + ':' + identifier);
       const chip = [...root.querySelectorAll('.catalog-chip')].find(c => c.dataset.source === source && c.dataset.identifier === identifier);
       if (chip?.dataset.id) return {source, identifier, source_name:names.get(source) || source, catalog_id:chip.dataset.id};
-      if (root.dataset.channelPk && original.get(source) === identifier)
+      if (root.dataset.channelPk && M.has(original,source,identifier))
         return {source, identifier, source_name:names.get(source) || source, channel_id:root.dataset.channelPk};
       if (names.has(source)) return {source,identifier,source_name:names.get(source),custom_id:identifier};
       return null;
     };
     const use = (target, confirmed=false) => {
-      if (target.custom_id) {
-        const mapping = parse(field.value);
-        if (mapping.has(target.source) && mapping.get(target.source) !== target.identifier && !confirmed) {
-          notice.replaceChildren(el('span','此来源已有不同 ID，请确认是否替换。'),button('替换并使用此 ID',()=>use(target,true)),button('保留原 ID',()=>{notice.textContent='已保留原 ID。';}));
-          return;
+      try {
+        if (target.custom_id) {
+          const mapping = M.parse(field.value), key = M.key(target.source,target.identifier);
+          if (mapping.has(key) && mapping.get(key) !== target.identifier && !confirmed) {
+            notice.replaceChildren(el('span','此来源已有不同 ID，请确认是否替换。'),button('替换并使用此 ID',()=>use(target,true)),button('保留原 ID',()=>{notice.textContent='已保留原 ID。';}));
+            return;
+          }
+          mapping.set(key,target.identifier);
+          const text=M.text(mapping);
+          field.value=text;
+          field.dispatchEvent(new Event('input',{bubbles:true}));
         }
-        mapping.set(target.source,target.identifier);
-        const text=[...mapping].map(([key,value])=>`<${key}:${value}>`).join('');
-        if(text.length>300){notice.textContent='合并后的来源 ID 超过 300 字符，请减少来源。';return;}
-        field.value=text;
+        if (target.row) root.dispatchEvent(new CustomEvent('catalog-select-request', {detail:target.row}));
+        if (!M.has(parse(field.value),target.source,target.identifier)) {
+          notice.textContent = '请先确认同一来源的 ID 替换，或在来源目录中选择此频道。'; return;
+        }
+        field.value = M.text(M.promote(M.parse(field.value),target.source,target.identifier));
         field.dispatchEvent(new Event('input',{bubbles:true}));
-      }
-      if (target.row) root.dispatchEvent(new CustomEvent('catalog-select-request', {detail:target.row}));
-      if (parse(field.value).get(target.source) !== target.identifier) {
-        notice.textContent = '请先确认同一来源的 ID 替换，或在来源目录中选择此频道。'; return;
-      }
-      primary.value = target.source;
-      primary.dispatchEvent(new Event('change',{bubbles:true}));
-      notice.textContent = `已选择 ${target.source_name} 为主来源，请保存频道。`;
+        primary.value = target.source;
+        primary.dispatchEvent(new Event('change',{bubbles:true}));
+        notice.textContent = `已选择 ${target.source_name} 为主来源，请保存频道。`;
+      } catch (error) {notice.textContent = error.message;}
     };
     const clock = value => value ? new Date(value).toLocaleTimeString('zh-CN', {timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}) : '未提供';
     const paint = (card, target, data) => {
@@ -138,7 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDays();
     root.querySelector('.compare-selected').addEventListener('click', () => {
       let count = 0; const missing = [];
-      for (const [source,identifier] of parse(field.value)) {
+      for (const [key,identifier] of parse(field.value)) {
+        const source = M.source(key);
         const target = targetFor(source,identifier);
         if (target) { schedule(target); count++; } else missing.push(names.get(source) || source);
       }
@@ -162,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
       schedule({...row,catalog_id:row.id,row});
     });
     primary.addEventListener('change', () => {
-      const identifier = parse(field.value).get(primary.value);
+      const mapping=parse(field.value);
+      const identifier = mapping.get(M.first(mapping,primary.value));
       const target = targetFor(primary.value,identifier);
       if (target) schedule(target);
       else notice.textContent = '请先从来源目录补充该来源的频道 ID，再预览或保存。';

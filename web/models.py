@@ -142,7 +142,7 @@ class Channel(models.Model):
         return channels
 
     def clean(self):
-        from .catalog import parse_mapping, SOURCE_NAMES
+        from .catalog import parse_mapping_entries, SOURCE_NAMES
         from django.core.exceptions import ValidationError
         import re
         if not self.tvg_id:
@@ -155,16 +155,16 @@ class Channel(models.Model):
                 raise ValidationError({'tvg_id': 'tvg-id 不能包含空白、尖括号、引号或 &。'})
             if Channel.objects.exclude(pk=self.pk).filter(tvg_id=self.tvg_id).exists():
                 raise ValidationError({'tvg_id': '该 tvg-id 已被其他频道使用，请为同名频道指定不同的 tvg-id。'})
-        mapping = parse_mapping(self.channel_id)
+        mapping = parse_mapping_entries(self.channel_id)
         if not mapping:
             raise ValidationError({'channel_id': '请从来源目录选择频道，或填写来源 ID。'})
         if self.source not in SOURCE_NAMES:
             raise ValidationError({'source': '请选择当前支持的主来源。'})
-        if self.source not in mapping:
+        if not any(source == self.source for source, _ in mapping):
             raise ValidationError({'source': '主来源必须包含在频道来源 ID 中。'})
         from .catalog import mapping_text
-        self.channel_id = mapping_text({self.source: mapping[self.source],
-            **{key: value for key, value in mapping.items() if key != self.source}})
+        first = next(index for index, (source, _) in enumerate(mapping) if source == self.source)
+        self.channel_id = mapping_text([mapping[first], *mapping[:first], *mapping[first+1:]])
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.sort_order:

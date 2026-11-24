@@ -15,21 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!query.value || query.value === previousName) query.value = matchName.value;
       previousName = matchName.value;
     });
-    const parse = value => {
-      const result = new Map();
-      const rest = value.replace(/<(\w+):([^<>]+)>/g, (_, source, identifier) => {
-        identifier = identifier.trim();
-        if (!identifier) throw new Error('来源 ID 不能为空。');
-        if (result.has(source) && result.get(source) !== identifier) throw new Error('同一来源只能保留一个 ID。');
-        result.set(source,identifier); return '';
-      });
-      if (rest.trim()) throw new Error('请先修正来源 ID 格式：<来源:ID>。');
-      return result;
-    };
+    const M = window.EpgSourceMapping;
+    const parse = M.parse;
+    const feeds = JSON.parse(root.dataset.xmltvFeeds || '{}');
+    const sourceName = (source, identifier) => source === 'xmltv'
+      ? `XMLTV · ${feeds[identifier.split(':',1)[0]] || '文件 ' + identifier.split(':',1)[0]}`
+      : names.get(source) || source;
     for (const chip of selected.children) {
       metadata.set(chip.dataset.source + ':' + chip.dataset.identifier, {
         id:chip.dataset.id, name:chip.dataset.name || matchName?.value || '',
-        source_name:names.get(chip.dataset.source) || chip.dataset.source
+        source_name:sourceName(chip.dataset.source,chip.dataset.identifier)
       });
     }
     let current = new Map(), valid = true, writing = false;
@@ -39,33 +34,32 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const render = () => {
       selected.replaceChildren();
-      for (const [source, identifier] of current) {
+      for (const [key, identifier] of current) {
+        const source = M.source(key);
         const row = metadata.get(source + ':' + identifier);
         const chip = document.createElement('span'); chip.className = 'catalog-chip';
-        Object.assign(chip.dataset,{source,identifier});
+        Object.assign(chip.dataset,{source,identifier,key});
         if (row?.id) {
           chip.dataset.id = row.id;
           const input = document.createElement('input'); input.type='hidden'; input.name=root.dataset.field; input.value=row.id;
           chip.append(input);
         }
         const handle = document.createElement('button'); handle.type='button'; handle.className='source-drag-handle';
-        handle.textContent='⠿'; handle.setAttribute('aria-label',`拖动来源：${names.get(source) || source}`);
+        handle.textContent='⠿'; handle.setAttribute('aria-label',`拖动来源：${sourceName(source,identifier)}`);
         handle.title='拖动排序，也可用左右方向键调整';
         const label = document.createElement('span'); label.className='source-chip-label';
-        label.textContent=`${row?.name || matchName?.value || '自定义频道'} · ${row?.source_name || names.get(source) || source} · ${identifier}`;
+        label.textContent=`${row?.name || matchName?.value || '自定义频道'} · ${row?.source_name || sourceName(source,identifier)} · ${identifier}`;
         const remove=document.createElement('button'); remove.type='button'; remove.className='source-remove';
-        remove.textContent='×'; remove.setAttribute('aria-label',`移除来源：${names.get(source) || source}`);
+        remove.textContent='×'; remove.setAttribute('aria-label',`移除来源：${sourceName(source,identifier)}`);
         chip.append(handle,label,remove); selected.append(chip);
       }
     };
     const sync = (next, promote=false) => {
-      if (promote && next.has(primary.value)) {
-        next = new Map([[primary.value,next.get(primary.value)], ...[...next].filter(([key])=>key!==primary.value)]);
-      }
-      const text=[...next].map(([key,value])=>`<${key}:${value}>`).join('');
+      if (promote) next = M.promote(next,primary.value);
+      const text=M.text(next);
       if (text.length>300) throw new Error('来源 ID 超过 300 字符，请减少来源。');
       current=next; valid=true;
-      const first=next.keys().next().value || '';
+      const first=M.source(next.keys().next().value || '');
       const primaryChanged=primary.value!==first;
       primary.value=first;
       render();
@@ -85,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     primary.addEventListener('change',()=>{
       if (writing) return;
       try {
-        if (primary.value && !current.has(primary.value)) {
+        if (primary.value && !M.first(current,primary.value)) {
           notice.textContent='该来源尚无频道 ID，请从目录选择或添加自定义 ID。'; return;
         }
         sync(mapping(),true);
@@ -93,13 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     selected.addEventListener('click',event=>{
       const remove=event.target.closest('.source-remove'); if(!remove) return;
-      try {const next=mapping();next.delete(remove.closest('.catalog-chip').dataset.source);sync(next);}
+      try {const next=mapping();next.delete(remove.closest('.catalog-chip').dataset.key);sync(next);}
       catch(error) {notice.textContent=error.message;}
     });
     const reorder = (sources, focusSource) => {
       try {
         sync(new Map(sources.map(key=>[key,current.get(key)])));
-        [...selected.querySelectorAll('.catalog-chip')].find(c=>c.dataset.source===focusSource)?.querySelector('.source-drag-handle').focus();
+        [...selected.querySelectorAll('.catalog-chip')].find(c=>c.dataset.key===focusSource)?.querySelector('.source-drag-handle').focus();
       } catch(error) {notice.textContent=error.message;}
     };
     let dragging=null;
@@ -116,18 +110,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if(target && target!==dragging && target.parentElement===selected) {
         const chips=[...selected.children];
         selected.insertBefore(dragging,chips.indexOf(dragging)<chips.indexOf(target)?target.nextSibling:target);
-        current=new Map([...selected.children].map(c=>[c.dataset.source,c.dataset.identifier]));
+        current=new Map([...selected.children].map(c=>[c.dataset.key,c.dataset.identifier]));
         writing=true;
-        idField.value=[...current].map(([key,value])=>`<${key}:${value}>`).join('');
+        idField.value=M.text(current);
         idField.dispatchEvent(new Event('input',{bubbles:true}));
-        primary.value=current.keys().next().value || '';
+        primary.value=M.source(current.keys().next().value || '');
         writing=false;
         notice.textContent='已调整抓取顺序，松开后请保存频道。';
       }
     });
     const finish=()=>{
       if(!dragging) return;
-      const source=dragging.dataset.source;dragging=null;reorder([...current.keys()],source);
+      const source=dragging.dataset.key;dragging=null;reorder([...current.keys()],source);
     };
     selected.addEventListener('pointerup',finish);
     selected.addEventListener('pointercancel',finish);
@@ -136,24 +130,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const handle=event.target.closest('.source-drag-handle');
       if(!handle || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
       event.preventDefault();
-      const source=handle.closest('.catalog-chip').dataset.source;
+      const source=handle.closest('.catalog-chip').dataset.key;
       const keys=[...current.keys()],index=keys.indexOf(source);
       const next=index+(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1);
       if(next>=0 && next<keys.length){[keys[index],keys[next]]=[keys[next],keys[index]];reorder(keys,source);}
     });
     const choose = (row, confirmed=false) => {
       try {
-        const next=mapping(), old=next.get(row.source);
+        const next=mapping(), key=M.key(row.source,row.identifier), old=next.get(key);
         if(old && old!==row.identifier && !confirmed) {
-          notice.replaceChildren(document.createTextNode(`${row.source_name} 已选 ID：${old}；新 ID：${row.identifier}。同一来源只能保留一个 ID。 `));
+          notice.replaceChildren(document.createTextNode(`${row.source_name} 已选 ID：${old}；新 ID：${row.identifier}。同一脚本来源或同一 XMLTV 文件只能保留一个频道 ID。 `));
           const replace=document.createElement('button');replace.type='button';replace.className='secondary';replace.textContent='替换此来源';
           replace.addEventListener('click',()=>choose(row,true));
           const keep=document.createElement('button');keep.type='button';keep.className='secondary';keep.textContent='保留原选择';
           keep.addEventListener('click',()=>sync(mapping()));notice.append(replace,keep);return;
         }
         const fillDetails=!next.size;
-        next.set(row.source,row.identifier);
-        if([...next].map(([k,v])=>`<${k}:${v}>`).join('').length>300) throw new Error('来源 ID 超过 300 字符，请减少来源。');
+        next.set(key,row.identifier);
+        M.text(next);
         metadata.set(row.source+':'+row.identifier,row);
         sync(next,true);
         if(fillDetails) {

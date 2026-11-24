@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import os, django, sys, datetime, platform
 from django.utils import timezone
-from utils.general import argvs_get, channel_ids_to_dict, in_exclude_channel
+from utils.general import argvs_get, in_exclude_channel
 from utils.aboutdb import log
 from .spiders import epg_func
 from dateutil import tz
@@ -189,21 +189,27 @@ def get_epg(channel, dt, func_arg=0, earliest_date=None):
     from web.options import options
     import time
     opts=options()
-    mappings={key:value for key,value in channel_ids_to_dict(channel.channel_id).items() if key in epg_funcs}
+    from web.catalog import parse_mapping_entries
+    from django.core.exceptions import ValidationError
+    try:
+        mappings=[(source,identifier) for source,identifier in parse_mapping_entries(channel.channel_id) if source in epg_funcs]
+    except ValidationError as exc:
+        return {'success':0,'epgs':[],'msg':str(exc),'ban':0,'source':channel.source}
     primary=channel.source
-    sources=([primary] if primary in mappings else [])
+    first=next((index for index,(source,_) in enumerate(mappings) if source==primary),None)
+    sources=[mappings[first]] if first is not None else []
     if opts['fallback']:
-        sources.extend(key for key in mappings if key!=primary)
+        sources.extend(pair for index,pair in enumerate(mappings) if index!=first)
     if not sources:
         return {'success':0,'epgs':[],'msg':'主来源未配置或未注册，且没有可用备用来源。','ban':0,'source':primary}
     ret={'success':0,'epgs':[],'msg':'没有可用节目。','ban':0,'source':primary}
-    for source in sources:
+    for source,identifier in sources:
         for attempt in range(1,opts['retries']+1):
-            ret=epg_func(channel,mappings[source],dt,func_arg=func_arg,source=source)
-            ret={**ret,'source':source}
+            ret=epg_func(channel,identifier,dt,func_arg=func_arg,source=source)
+            ret={**ret,'source':source,'source_identifier':identifier}
             if ret.get('epgs') or ret.get('ban'):
                 break
-            log(f'{channel.pk}-{channel.name}-{source} 第 {attempt}/{opts["retries"]} 次获取失败：{ret.get("msg","")}',level=2)
+            log(f'{channel.pk}-{channel.name}-{source} ({identifier}) 第 {attempt}/{opts["retries"]} 次获取失败：{ret.get("msg","")}',level=2)
             if attempt<opts['retries'] and opts['retry_delay_seconds']:
                 time.sleep(opts['retry_delay_seconds'])
         if ret.get('epgs'):
@@ -221,7 +227,7 @@ def get_epg(channel, dt, func_arg=0, earliest_date=None):
             try:
                 from web.programmes import add_previous_context
                 if earliest_date is None or dt>earliest_date:
-                    ret=add_previous_context(channel,ret,dt,mappings[source],source)
+                    ret=add_previous_context(channel,ret,dt,identifier,source)
             except Exception as exc:
                 log(f'{channel.name} 前一日衔接未补充：{type(exc).__name__}',level=2)
             return ret
