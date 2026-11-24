@@ -1,4 +1,4 @@
-name: Docker amd64 + arm64
+name: Docker multi-platform
 
 on:
   push:
@@ -23,7 +23,7 @@ env:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -42,7 +42,7 @@ jobs:
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             if [[ "$EVENT_NAME" != "pull_request" ]]; then
-              echo "::warning::DOCKERHUB_TOKEN is missing. Both architectures will build, but no image will be pushed."
+              echo "::warning::DOCKERHUB_TOKEN is missing. All supported architectures will build, but no image will be pushed."
               echo "Add repository Secret DOCKERHUB_TOKEN, then rerun this workflow to publish." >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
@@ -61,7 +61,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
         with:
-          platforms: arm64
+          platforms: arm,arm64,386,ppc64le,riscv64,s390x
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
@@ -73,13 +73,13 @@ jobs:
           username: zsz520
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build both architectures
+      - name: Build supported architectures
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/ppc64le,linux/riscv64,linux/s390x
           push: ${{ steps.publish.outputs.enabled == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -93,5 +93,10 @@ jobs:
         shell: bash
         run: |
           docker buildx imagetools inspect "$IMAGE_NAME@$IMAGE_DIGEST" --raw > /tmp/epg-manifest.json
-          jq -e 'any(.manifests[]; .platform.os == "linux" and .platform.architecture == "amd64") and any(.manifests[]; .platform.os == "linux" and .platform.architecture == "arm64")' /tmp/epg-manifest.json
-          echo "Published linux/amd64 + linux/arm64: $IMAGE_NAME@$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          for platform in amd64 arm64 arm/v7 386 ppc64le riscv64 s390x; do
+            arch="${platform%%/*}"
+            variant=""
+            if [[ "$platform" == */* ]]; then variant="${platform#*/}"; fi
+            jq -e --arg arch "$arch" --arg variant "$variant" 'any(.manifests[]; .platform.os == "linux" and .platform.architecture == $arch and ($variant == "" or .platform.variant == $variant))' /tmp/epg-manifest.json
+          done
+          echo "Published amd64, arm64, arm/v7, 386, ppc64le, riscv64, s390x: $IMAGE_NAME@$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"

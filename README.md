@@ -4,7 +4,7 @@
 
 ## 部署
 
-使用 [compose.yaml](compose.yaml) 启动，自动构建 Linux amd64 / arm64 镜像。
+使用 [compose.yaml](compose.yaml) 启动，支持 Linux amd64、arm64、arm/v7、386、ppc64le、riscv64、s390x。
 
 ```sh
 docker compose pull
