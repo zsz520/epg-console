@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 # 广西网络广播电视台-官网来源,2023-06-05添加到数据库，广西卫视及地方6个频道
 
 # POST请求数据
@@ -9,11 +10,12 @@
 # platformId: bd7d620a502d43c09b35469b3cd8c211
 # deptid及PLATFORMID为固定值，来源  https://www.gxtv.cn/static/httpRequestOfParams.js  webDeptId = "0a509685ba1a11e884e55cf3fc49331c"  webType = "bd7d620a502d43c09b35469b3cd8c211";
 
-import requests, datetime, os
+import datetime, os
 from bs4 import BeautifulSoup as bs
 from utils.general import headers
 
 
+@programme_result('广西广电')
 def get_epgs_gxntv(channel, channel_id, dt, func_arg):
     epgs = []
     msg = ""
@@ -35,9 +37,13 @@ def get_epgs_gxntv(channel, channel_id, dt, func_arg):
         epgs = []
         for epga in epgs_contents:
             starttime_str = epga["programTime"]
-            time_delay = epga["programmeLength"]
+            time_delay = epga.get("programmeLength")
             starttime = datetime.datetime.strptime(starttime_str, "%Y-%m-%d %H:%M:%S")
-            endtime = starttime + datetime.timedelta(seconds=time_delay)
+            try:
+                duration = float(time_delay)
+            except (TypeError, ValueError):
+                duration = 0
+            endtime = starttime + datetime.timedelta(seconds=duration) if duration else None
             title = epga["programName"].strip()
             epg = {
                 "channel_id": channel.id,
@@ -62,6 +68,7 @@ def get_epgs_gxntv(channel, channel_id, dt, func_arg):
     return ret
 
 
+@catalogue_result('广西广电')
 def get_channels_gxntv():
     url = "https://program.gxtv.cn/"
     res = requests.get(url, headers=headers)

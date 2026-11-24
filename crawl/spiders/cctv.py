@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 # CCTV官方
-import requests, re, datetime, json, os
+import re, datetime, json, os
 from utils.general import headers
 from bs4 import BeautifulSoup as bs
 
@@ -52,6 +53,7 @@ def parse_programmes_cctv(payload, channel, channel_id, day):
     return epgs, message
 
 
+@programme_result('央视')
 def get_epgs_cctv(channel, channel_id, dt, func_arg=0):
     if isinstance(dt, datetime.datetime):
         dt = dt.date()
@@ -88,6 +90,7 @@ def get_epgs_cctv(channel, channel_id, dt, func_arg=0):
     return result
 
 
+@catalogue_result('央视')
 def get_channels_cctv():
     channels = []
     host = "https://tv.cctv.com"
@@ -99,14 +102,20 @@ def get_channels_cctv():
     need_date = datetime.datetime.now().strftime("%Y%m%d")
     for li in lis:
         id = li.select("img")[0].attrs["title"].strip()
-        logo = "http://" + li.select("img")[0].attrs["src"].strip()
+        logo = li.select("img")[0].attrs["src"].strip()
+        if logo.startswith('//'):
+            logo = 'https:' + logo
+        elif not logo.startswith(('http://', 'https://')):
+            logo = 'https://' + logo.lstrip('/')
         url_info = (
-            "http://api.cntv.cn/epg/getEpgInfoByChannelNew?c=%s&serviceId=tvcctv&d=%s&t=jsonp&cb=set"
+            "https://api.cntv.cn/epg/getEpgInfoByChannelNew?c=%s&serviceId=tvcctv&d=%s&t=jsonp&cb=set"
             % (id, need_date)
         )
         res = requests.get(url_info, headers=headers, timeout=5)
         res.encoding = "utf-8"
         research = re.search('"channelName":"(.+?)".+?"lvUrl":"(.+?)"', res.text)
+        if not research:
+            raise ValueError(f'频道 {id} 缺少名称或节目页地址，未覆盖原目录。')
         name = research.group(1)
         url = research.group(2)
         channel = {

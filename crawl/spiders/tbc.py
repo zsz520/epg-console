@@ -1,9 +1,11 @@
 # -*- coding:utf-8 -*-
-import requests, datetime, time, re, os
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
+import datetime, time, re, os
 from utils.general import headers
 from bs4 import BeautifulSoup as bs
 
 
+@programme_result('台湾宽频')
 def get_epgs_tbc(channel, channel_id, dt, func_arg):
     epgs = []
     msg = ""
@@ -20,10 +22,14 @@ def get_epgs_tbc(channel, channel_id, dt, func_arg):
             lis = ul.select("li")
             for li in lis:
                 title = li.p.text
-                desc = li.attrs["desc"]
+                desc = li.get("desc", "")
                 date_ = li.attrs["date"]
                 time_delay = li.attrs["time"].strip()
                 time_delay_re = re.search(r"(\d+:\d+)~(\d+:\d+)", time_delay)
+                if not time_delay_re:
+                    if not time_delay.strip():
+                        continue
+                    raise ValueError('节目时间格式异常，未返回残缺节目。')
                 if time_delay_re:  # 有节目信息则解析
                     start_str, end_str = time_delay_re.group(1), time_delay_re.group(
                         2
@@ -67,11 +73,11 @@ today_int = int(
 
 
 # 下载TBC所有频道ID及名称
+@catalogue_result('台湾宽频')
 def get_channels_tbc():
     channels = []
-    cookies = {"ASP.NET_SessionId": "v111fiox1mzc0wpc0d4iue5c"}
     url = "https://www.tbc.net.tw/EPG"
-    res = requests.get(url, headers=headers, cookies=cookies, timeout=6)
+    res = requests.get(url, headers=headers, timeout=(8, 20))
     res.encoding = "utf-8"
     soup = bs(res.text, "html.parser")
     lis = soup.select("ul.list_tv > li")

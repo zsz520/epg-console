@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
-import requests, time, datetime, re
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
+import time, datetime, re
 from utils.general import headers
 from bs4 import BeautifulSoup as bs
 
@@ -398,6 +399,7 @@ def _get_epgs_tvmao_desktop(channel, channel_id, dt, func_arg):
     }
 
 
+@programme_result('电视猫')
 def get_epgs_tvmao(channel, channel_id, dt, func_arg):
     """网页主接口；失败时用百度电视猫 JSON 接口兜底。"""
     desktop_ret = _get_epgs_tvmao_desktop(channel, channel_id, dt, func_arg)
@@ -420,6 +422,7 @@ def get_epgs_tvmao(channel, channel_id, dt, func_arg):
     return json_ret
 
 
+@programme_result('电视猫')
 def get_epgs_tvmao2(channel, channel_id, dt, func_arg):
     """JSON 主接口；失败时用网页接口兜底。"""
     json_ret = _get_epgs_tvmao_json(channel, channel_id, dt, func_arg)
@@ -442,6 +445,7 @@ def get_epgs_tvmao2(channel, channel_id, dt, func_arg):
     return json_ret
 
 
+@catalogue_result('电视猫')
 def get_channels_tvmao():
     url_sort = "https://www.tvmao.com/program/playing/"
     res = requests.get(url_sort, headers=headers, timeout=5)

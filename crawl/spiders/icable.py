@@ -1,8 +1,10 @@
 # -*-coding:utf-8-*-
-import requests, os, datetime
-from utils.general import cht_to_chs, headers
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
+import os, datetime
+from utils.general import headers
 
 
+@programme_result('i-Cable')
 def get_epgs_icable(channel, channel_id, dt, func_arg):
     epgs = []
     msg = ""
@@ -17,14 +19,16 @@ def get_epgs_icable(channel, channel_id, dt, func_arg):
         js = res.json()
         epg_list = js["epgs"]
         for g in epg_list:
-            title = cht_to_chs(g["programme_name_chi"])  # 可以选择英文名
+            title = g["programme_name_chi"]
             ampm = g["session_mark"]
             t = g["time"]
             starttime = datetime.datetime.strptime(
                 dt.strftime("%Y%m%d") + t, "%Y%m%d%H:%M"
             )
-            if ampm.upper() == "PM":
-                starttime = starttime + datetime.timedelta(hours=12)
+            if ampm.upper() in ("AM", "PM"):
+                if not 1 <= starttime.hour <= 12:
+                    raise ValueError('接口的 12 小时制时间无效。')
+                starttime = starttime.replace(hour=starttime.hour % 12 + (12 if ampm.upper() == "PM" else 0))
             elif ampm.upper() == "NM":
                 starttime = starttime + datetime.timedelta(days=1)
             epg = {
@@ -51,6 +55,7 @@ def get_epgs_icable(channel, channel_id, dt, func_arg):
     return ret
 
 
+@catalogue_result('i-Cable')
 def get_channels_icable():
     url = "http://epg.i-cable.com/ci/home/?api=api&locale=chi"
     res = requests.get(url)

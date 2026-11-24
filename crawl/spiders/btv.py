@@ -1,11 +1,12 @@
 # -*- coding:utf-8 -*-
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 # 北京电视台官方来源 10 个频道
 # 2022-11-03官方更改接口
 # https://dynamic.rbc.cn/bvradio_app/service/LIVE?functionName=getCurrentChannel&channelId=135&curdate=2022-11-01
 # http://jiemudan.brtv.org.cn/index.html?channel=TvCh1602660467213184  地址
 # http://www.brtv.org.cn/mobileinf/rest/cctv/videolivelist/dayWeb?json={'id':'TvCh1602660467213184','day':'2021-12-15'}  接口
 from bs4 import BeautifulSoup as bs
-import requests, datetime, os
+import datetime, os
 from utils.general import headers
 
 
@@ -69,6 +70,7 @@ def parse_programmes_btv(payload, channel, channel_id, day):
     return epgs, message
 
 
+@programme_result('北京电视台')
 def get_epgs_btv(channel, channel_id, dt, func_arg=0):
     if isinstance(dt, datetime.datetime):
         dt = dt.date()
@@ -103,6 +105,7 @@ def get_epgs_btv(channel, channel_id, dt, func_arg=0):
     return result
 
 
+@catalogue_result('北京电视台')
 def get_channels_btv():
     channels = []
     url = "https://www.brtv.org.cn/gbdsb.shtml"
@@ -136,6 +139,8 @@ def get_channels_btv():
         )
         if "青年频道" in desc:
             continue
+        if n >= len(channels):
+            break
         channels[n]["desc"] = desc
         n += 1
     return channels

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from crawl.source_utils import programme_result, catalogue_result, SHANGHAI
 """搜视目录和节目表；重试、跨日与缺失补全由公共流程处理。"""
 import datetime
 import re
@@ -140,6 +141,7 @@ def get_desc_tvsou(url):
     return ''
 
 
+@programme_result('搜视')
 def get_epgs_tvsou(channel, channel_id_, dt, func_arg=0):
     if isinstance(dt, datetime.datetime):
         dt = dt.date()
@@ -157,6 +159,7 @@ def get_epgs_tvsou(channel, channel_id_, dt, func_arg=0):
     return result
 
 
+@catalogue_result('搜视')
 def get_channels_tvsou():
     try:
         soup = fetch_page('/epg/difang/')

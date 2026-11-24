@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
-import requests, datetime, os
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
+import datetime, os
 # 默认授权集中在本文件；仍可通过 CHUANLIU_AUTHORIZATION 环境变量覆盖。
 DEFAULT_AUTHORIZATION = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI5ODQwODlhNjc1OGU0ZjJlOTViMjk4NWM4YjA1MDNmYiIsImNvbXBhbnkiOiJxaXlpIiwibmFtZSI6InRlcm1pbmFsIn0.1gDPpBcHJIE8dLiq7UekUlPWMtJOYymI8zoIYlsVgc4'
 
@@ -12,6 +13,7 @@ def authorization_headers():
     return {'Authorization': value, 'User-Agent': 'okhttp/3.10.0.7'}
 
 
+@programme_result('川流 TV')
 def get_epgs_chuanliu(channel, channel_id, dt, func_arg):
     epgs = []
     msg = ""
@@ -33,11 +35,14 @@ def get_epgs_chuanliu(channel, channel_id, dt, func_arg):
             n += 1
             title = j["name"]
             channel_name = j["bd_name"]
-            desc = j["desc"]
+            desc = j.get("desc") or ""
             starttime = j["begin_time"]  # 2023-02-18 15:42:00'
             endtime = j["end_time"]
             starttime = datetime.datetime.strptime(starttime, "%Y-%m-%d %H:%M:%S")
-            endtime = datetime.datetime.strptime(endtime, "%Y-%m-%d %H:%M:%S")
+            try:
+                endtime = datetime.datetime.strptime(endtime, "%Y-%m-%d %H:%M:%S")
+            except (TypeError, ValueError):
+                endtime = None
             epg = {
                 "channel_id": channel.id,
                 "starttime": starttime,
@@ -66,6 +71,7 @@ def get_epgs_chuanliu(channel, channel_id, dt, func_arg):
 """
 
 
+@catalogue_result('川流 TV')
 def get_channels_chuanliu():
     channels = []
     sorts = {

@@ -1,16 +1,18 @@
 # -*- coding:utf-8 -*-
-import requests, re, datetime, os
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
+import re, datetime, os
 from utils.general import headers
 from bs4 import BeautifulSoup as bs
 
 
+@programme_result('有线宽频')
 def get_epgs_cabletv(channel, channel_id, dt, func_arg):
     url = "http://www.cabletv.com.hk/ct/_cabletv_list_common.php?%s&date=%s" % (
         channel_id,
         dt.strftime("%Y%m%d"),
     )
     msg = ""  # 临时MSG，记录出错信息
-    success = 0  # 设置采集成功为否
+    success = 1  # 有效节目通过后成功；空结果由公共校验拒绝
     epgs = []
     try:
         res = requests.get(url, headers=headers, timeout=5)
@@ -32,13 +34,14 @@ def get_epgs_cabletv(channel, channel_id, dt, func_arg):
                 year=dt.year,
                 month=dt.month,
                 day=dt.day,
-                hour=int(starttime_str[:2]),
-                minute=int(starttime_str[-2:]),
+                hour=int(starttime_str.split(":")[0]),
+                minute=int(starttime_str.split(":")[1]),
             )
+            starttime = starttime.replace(year=old_dt.year, month=old_dt.month, day=old_dt.day) if epgs else starttime
             if starttime < old_dt:
-                starttime = starttime + datetime.timedelta(hours=12)
-                if starttime < old_dt:
-                    starttime = starttime + datetime.timedelta(hours=12)
+                if old_dt.hour < 18 or starttime.hour > 6:
+                    raise ValueError('节目时间顺序异常，无法确认跨日，未写入数据。')
+                starttime += datetime.timedelta(days=1)
             epg = {
                 "channel_id": channel.id,
                 "starttime": starttime,
@@ -49,6 +52,8 @@ def get_epgs_cabletv(channel, channel_id, dt, func_arg):
             }
             epgs.append(epg)
             old_dt = starttime
+        if not epgs:
+            raise ValueError('旧有线节目页未返回节目，可能已迁移或停用；请改用其他来源。')
     except Exception as e:
         success = 0
         spidername = os.path.basename(__file__).split(".")[0]
@@ -64,6 +69,7 @@ def get_epgs_cabletv(channel, channel_id, dt, func_arg):
 
 
 ######################爬取cabletv上的频道名单##########################
+@catalogue_result('有线宽频')
 def get_channels_cabletv():  # 使用原来代码，只更改输出
     dds = []
     lis = []
