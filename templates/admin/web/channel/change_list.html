@@ -1,0 +1,8 @@
+{% extends 'admin/change_list.html' %}{% load static %}
+{% block object-tools-items %}<li><a href="{% url 'admin:channel-export' 'json' %}">导出 JSON</a></li><li><a href="{% url 'admin:channel-export' 'csv' %}">导出 CSV</a></li>{% if perms.web.add_channel and perms.web.change_channel %}<li><a href="{% url 'admin:channel-transfer' %}">导入频道</a></li>{% endif %}{{ block.super }}{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'console/channel-list.js' %}" defer></script><script src="{% static 'console/channel-order.js' %}" defer></script>{% endblock %}
+{% block content %}<p class="channel-list-hint">分组依次为央视、卫视、数字付费、港澳台、其他地方。序号整体连续递增；按住“⠿”拖动组内频道，再点击“保存顺序”。可在筛选结果或当前页中调整，其他频道相对位置保留。常用字段仍可直接修改，完成后点击底部“保存”。</p><div class="channel-order-toolbar" data-enabled="{{ can_reorder|yesno:'true,false' }}" data-url="{% url 'admin:channel-reorder' %}">{% if can_reorder %}<button type="button" class="primary order-save" disabled>保存顺序</button><button type="button" class="secondary order-reset" disabled>撤销拖动</button>{% else %}<span>当前为表头排序或无修改权限。</span><a href="{{ manual_order_url }}">切回手动顺序</a>{% endif %}<span class="order-status" role="status"></span></div>{{ channel_order|json_script:'channel-order-data' }}<div class="list-edit-notice" role="status"></div>{{ block.super }}
+<dialog class="channel-quick-dialog"><header><h2>频道快速编辑</h2><button type="button" class="secondary quick-close" aria-label="关闭快速编辑">关闭</button></header><div class="quick-close-warning" hidden>还有未保存的修改。<button type="button" class="secondary quick-discard">放弃修改并关闭</button><button type="button" class="secondary quick-continue">继续编辑</button></div><iframe title="频道快速编辑"></iframe></dialog>{% endblock %}
+
+
+
