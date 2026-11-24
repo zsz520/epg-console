@@ -2,3 +2,9 @@
 data/
 __pycache__/
 *.pyc
+
+# Local checks and generated assets do not belong in release source.
+staticfiles/
+.pytest_cache/
+.coverage
+htmlcov/
