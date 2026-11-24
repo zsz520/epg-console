@@ -1,0 +1,14 @@
+<div class="category-picker" id="{{ widget.attrs.id }}" role="group" aria-label="{{ group_label }}">
+  <input type="search" class="category-search" placeholder="搜索分组" aria-label="搜索{{ group_label }}" autocomplete="off">
+  <div class="category-toolbar">
+    <button type="button" class="secondary category-select-visible">全选结果</button>
+    <button type="button" class="secondary category-clear">清空已选</button>
+    <span class="category-count" role="status" aria-live="polite"></span>
+  </div>
+  <div class="category-options">
+    {% for group_name, options, index in widget.optgroups %}{% for option in options %}
+    <div class="category-option">{% include option.template_name with widget=option %}</div>
+    {% endfor %}{% endfor %}
+    <p class="category-empty" hidden>没有匹配的分组</p>
+  </div>
+</div>
