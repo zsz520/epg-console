@@ -22,13 +22,17 @@ if role in ('web','all') and ((data/'restore-pending.json').exists() or (data/'r
         print('备份恢复未完成，已保留原数据；请检查维护中心并重新预览备份。',flush=True)
 
 if role in ('all', 'web', 'scheduler', 'crawl') and os.getuid() == 0:
-    # Initialize only application directories, then run both services unprivileged.
+    from docker.permissions import prepare_data_permissions
     for directory in (data, data / 'sources', data / 'download'):
         directory.mkdir(exist_ok=True)
-        os.chown(directory, 10001, 10001)
+    prepare_data_permissions(data)
     os.setgroups([])
     os.setgid(10001)
     os.setuid(10001)
+
+if role in ('all', 'web', 'scheduler', 'crawl'):
+    from docker.permissions import check_data_access
+    check_data_access(data)
 
 if role in ('web', 'all'):
     (data / 'download').mkdir(exist_ok=True)
