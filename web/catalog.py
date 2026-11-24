@@ -10,6 +10,36 @@ from crawl.source_registry import get_source_names
 SOURCE_NAMES = get_source_names()
 
 
+def queue_new_source_catalogs():
+    """Queue first catalogues at worker startup, with no network I/O here.
+
+    Existing snapshots (including inactive rows) count as initialized. Failed
+    first fetches can be retried at the next restart without a permanent marker.
+    The caller holds the worker lock, so concurrent workers cannot enqueue twice.
+    """
+    from crawl.source_registry import registry
+    from .models import Channel_list, Task
+    from .tasks import enqueue
+
+    sources, _ = registry()
+    existing = set(Channel_list.objects.values_list('source', flat=True).distinct())
+    pending = list(Task.objects.filter(kind='catalog', status__in=['queued', 'running']))
+    if any(not task.source and not task.params.get('channel_ids') for task in pending):
+        return []  # A queued full refresh already covers the new sources.
+    busy = {task.source for task in pending}
+    created = []
+    for source, entry in sources.items():
+        if not entry.external or not entry.channels or source in existing or source in busy:
+            continue
+        task, new = enqueue('catalog', source=source, params={'startup_catalog': True})
+        if new:
+            task.summary = '发现新来源，已自动排队抓取首次频道目录。'
+            task.save(update_fields=['summary'])
+            created.append(task)
+            print(f'新来源 {entry.name} ({source})：频道目录任务 #{task.pk} 已自动排队。', flush=True)
+    return created
+
+
 def name_key(value):
     return re.sub(r'\s+', '', unicodedata.normalize('NFKC', cht_to_chs(value or ''))).casefold()
 

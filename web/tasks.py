@@ -90,6 +90,8 @@ def worker():
         Task.objects.filter(status='running').update(status='failed', finished_at=interrupted_at, summary='工作进程曾中断，请重新执行。')
         for task in interrupted:
             completed(task, interrupted_at)
+        from .catalog import queue_new_source_catalogs
+        queue_new_source_catalogs()
         while not stopping[0]:
             heartbeat()
             close_old_connections()
