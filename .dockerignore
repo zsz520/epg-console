@@ -1,0 +1,15 @@
+.git
+.env
+__pycache__
+*.pyc
+db
+nginx
+uwsgi
+sh
+download
+data
+*.tar
+*.gz
+docker/inspect_seed.py
+docker/export_seed.py
+static/admin

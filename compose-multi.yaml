@@ -1,0 +1,58 @@
+# 导入配套镜像后部署；只需按需修改端口、本地目录和初始账号。
+name: epg-console
+services:
+  init-data:
+    image: zsz520/epg-console:2.12
+    pull_policy: never
+    user: "0:0"
+    restart: "no"
+    entrypoint: ["python", "-c", "import os; os.chown('/data', 10001, 10001)"]
+    volumes: &data
+      - ./data:/data  # 保留原数据目录；也可填写 NAS 上的绝对路径。
+    healthcheck:
+      disable: true
+
+  web:
+    command: ["web"]
+    image: zsz520/epg-console:2.12
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8000:8000"  # 仅修改左侧访问端口。
+    environment: &environment
+      TZ: Asia/Shanghai
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: ""  # 首次初始化生效；留空默认 admin，并写入 data/admin-password.txt。
+    volumes: *data
+    depends_on:
+      init-data:
+        condition: service_completed_successfully
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  crawler:
+    image: zsz520/epg-console:2.12
+    pull_policy: never
+    restart: unless-stopped
+    init: true
+    command: ["scheduler"]
+    environment: *environment
+    volumes: *data
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    logging: *logging
+
+# 抓取间隔、超时及自动抓取开关：在后台左侧“设置中心”设置。
+# init-data 正常完成后显示停止，web 与 crawler 持续运行。
+
+
+
+
+

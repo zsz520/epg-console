@@ -1,0 +1,1232 @@
+{
+  "date": "2026-11-22",
+  "tested": 143,
+  "nonempty": 111,
+  "empty_or_failed": 32,
+  "programme_count": 4745,
+  "channels": [
+    {
+      "id": "cctv1HD",
+      "success": 1,
+      "count": 35,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv2HD",
+      "success": 1,
+      "count": 36,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv3HD",
+      "success": 1,
+      "count": 22,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv4HD",
+      "success": 1,
+      "count": 42,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv5HD",
+      "success": 1,
+      "count": 24,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv6HD",
+      "success": 1,
+      "count": 28,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv7HD",
+      "success": 1,
+      "count": 30,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv8HD",
+      "success": 1,
+      "count": 34,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv9HD",
+      "success": 1,
+      "count": 29,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv10HD",
+      "success": 1,
+      "count": 31,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv11HD",
+      "success": 1,
+      "count": 21,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv12HD",
+      "success": 1,
+      "count": 32,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "CCTVNewsHD",
+      "success": 1,
+      "count": 38,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctvseHD",
+      "success": 1,
+      "count": 22,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv15HD",
+      "success": 1,
+      "count": 17,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv16HD",
+      "success": 1,
+      "count": 27,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv17HD",
+      "success": 1,
+      "count": 32,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cctv5SportHD",
+      "success": 1,
+      "count": 18,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "chongqingHD",
+      "success": 1,
+      "count": 40,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "CQTVNewsHD",
+      "success": 1,
+      "count": 54,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqyingshiHD",
+      "success": 1,
+      "count": 34,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "CQTVTrendyHD",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqssgwHD",
+      "success": 1,
+      "count": 41,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqwtylHD",
+      "success": 1,
+      "count": 30,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqggncHD",
+      "success": 1,
+      "count": 50,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqseHD",
+      "success": 1,
+      "count": 10,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "CQTVkejiaoHD",
+      "success": 1,
+      "count": 41,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "aikanHD",
+      "success": 1,
+      "count": 68,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cqcarSD",
+      "success": 1,
+      "count": 99,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cwjdHD",
+      "success": 1,
+      "count": 28,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "mryyHD",
+      "success": 1,
+      "count": 143,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "bishanHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "fulingzh",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "fengjieHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "chengkouHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "jiangjinHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "youyang",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "zhongxian",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "tongliangzongheHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "dianjiangHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "yougouwu",
+      "success": 1,
+      "count": 35,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "fsgw",
+      "success": 1,
+      "count": 18,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "mlzqHD",
+      "success": 1,
+      "count": 66,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jusha",
+      "success": 1,
+      "count": 31,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "ysgw",
+      "success": 1,
+      "count": 47,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "yggw",
+      "success": 1,
+      "count": 26,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jiangsuHD",
+      "success": 1,
+      "count": 35,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "beijingHD",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "zhejiangHD",
+      "success": 1,
+      "count": 38,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shanghaiHD",
+      "success": 1,
+      "count": 34,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shenzhenHD",
+      "success": 1,
+      "count": 55,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "liaoningHD",
+      "success": 1,
+      "count": 55,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "tianjinHD",
+      "success": 1,
+      "count": 43,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "guizhouHD",
+      "success": 1,
+      "count": 48,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "sichuanHD",
+      "success": 1,
+      "count": 55,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "yunnanSD",
+      "success": 1,
+      "count": 50,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dongnanHD",
+      "success": 1,
+      "count": 47,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "heilongjiangHD",
+      "success": 1,
+      "count": 50,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "anhuiSD",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hebeiSD",
+      "success": 1,
+      "count": 47,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jiangxiHD",
+      "success": 1,
+      "count": 51,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hubeiSD",
+      "success": 1,
+      "count": 33,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hainanSD",
+      "success": 1,
+      "count": 53,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "gansuHD",
+      "success": 1,
+      "count": 56,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shandongHD",
+      "success": 1,
+      "count": 44,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jilinHD",
+      "success": 1,
+      "count": 51,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "guangxiHD",
+      "success": 1,
+      "count": 43,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "neimengkuSD",
+      "success": 1,
+      "count": 60,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hunanHD",
+      "success": 1,
+      "count": 43,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "guangdongHD",
+      "success": 1,
+      "count": 40,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "henanHD",
+      "success": 1,
+      "count": 47,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "bingtuanSD",
+      "success": 1,
+      "count": 48,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "ningxia",
+      "success": 1,
+      "count": 46,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "bjkakuSD",
+      "success": 1,
+      "count": 65,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jinyingSD",
+      "success": 1,
+      "count": 23,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "sanshaSD",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "qinghaiSD",
+      "success": 1,
+      "count": 41,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "tianqiSD",
+      "success": 1,
+      "count": 143,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "bjayjsSD",
+      "success": 1,
+      "count": 46,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "sdjiaoyuSD",
+      "success": 1,
+      "count": 26,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "xinjiangSD",
+      "success": 1,
+      "count": 52,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "xizangSD",
+      "success": 1,
+      "count": 41,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cgtnSD",
+      "success": 1,
+      "count": 43,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cetv-1SD",
+      "success": 1,
+      "count": 60,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "cetv-4SD",
+      "success": 1,
+      "count": 46,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shenghuo",
+      "success": 1,
+      "count": 82,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "klcdHD",
+      "success": 1,
+      "count": 15,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "diyijuchangHD",
+      "success": 1,
+      "count": 22,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dsjcHD",
+      "success": 1,
+      "count": 61,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "fyjcHD",
+      "success": 1,
+      "count": 22,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "qsjlHD",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "bqkjHD",
+      "success": 1,
+      "count": 24,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jingbaoHD",
+      "success": 1,
+      "count": 19,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "yxfyHD",
+      "success": 1,
+      "count": 42,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "nvxing",
+      "success": 1,
+      "count": 25,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hjjcHD",
+      "success": 1,
+      "count": 20,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "fyyyHD",
+      "success": 1,
+      "count": 18,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "ystqHD",
+      "success": 1,
+      "count": 18,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "fyzqHD",
+      "success": 1,
+      "count": 19,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "yswhHD",
+      "success": 1,
+      "count": 28,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "golfHD",
+      "success": 1,
+      "count": 16,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "zaojiaoHD",
+      "success": 1,
+      "count": 61,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dfcj",
+      "success": 1,
+      "count": 79,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "techan",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "diaoyu",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "fazhi",
+      "success": 1,
+      "count": 56,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jinse",
+      "success": 1,
+      "count": 111,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "caifu",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "CCTV4K",
+      "success": 1,
+      "count": 40,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "jiangsu4K",
+      "success": 1,
+      "count": 35,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "CCTV16_4K",
+      "success": 1,
+      "count": 27,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "beijing4K",
+      "success": 1,
+      "count": 37,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "guangdong4K",
+      "success": 1,
+      "count": 40,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shenzhen4K",
+      "success": 1,
+      "count": 55,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dongfang4k",
+      "success": 1,
+      "count": 34,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "zhejiang4K",
+      "success": 1,
+      "count": 38,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "shandong4K",
+      "success": 1,
+      "count": 44,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "hunan4K",
+      "success": 1,
+      "count": 43,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "sichuan4K",
+      "success": 1,
+      "count": 55,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dyjyHD",
+      "success": 1,
+      "count": 49,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "dmxcHD",
+      "success": 1,
+      "count": 105,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "weiqi",
+      "success": 1,
+      "count": 46,
+      "message": "",
+      "dates": [
+        "2026-11-22"
+      ]
+    },
+    {
+      "id": "YCZH",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "beibeiHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "WXZH",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "rongchangHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "changshou",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "pengshui",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "wushanzhSD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "kaizhouHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "wanzhouHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "shizhu",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "FDZH",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "nanchuanHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "wlzh",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "dazu",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "qianjiang",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "yubeiHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "liangping",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "xiushan",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "TNZH",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "hechuan",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    },
+    {
+      "id": "wanshengHD",
+      "success": 0,
+      "count": 0,
+      "message": "广电云：该频道没有返回请求日期的节目，保留原节目",
+      "dates": []
+    }
+  ]
+}
