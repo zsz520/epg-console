@@ -1,0 +1,2 @@
+{% extends 'admin/change_list.html' %}
+{% block object-tools-items %}{% if perms.web.delete_epg and perms.web.add_task %}<li><a href="{% url 'admin:programme-purge' %}">删除节目单（日期 / 全部）</a></li>{% endif %}{{ block.super }}{% endblock %}
