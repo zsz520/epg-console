@@ -402,6 +402,18 @@ class Task(models.Model):
     def __str__(self):
         return f'#{self.pk} {self.get_kind_display()} · {self.get_status_display()}'
 
+    @property
+    def source_label(self):
+        from crawl.source_registry import get_source_names
+        names = get_source_names()
+        if self.params.get('sources'):
+            return ' → '.join(names.get(source, source) for source in self.params['sources'])
+        if self.source:
+            return names.get(self.source, self.source)
+        if self.kind == 'catalog':
+            return '全部来源' if self.params.get('all_sources') else '按设置范围'
+        return '全部 / 已启用频道'
+
 
 class CrawlFailure(models.Model):
     channel=models.ForeignKey(Channel,on_delete=models.CASCADE)

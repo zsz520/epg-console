@@ -17,8 +17,9 @@ DATA = Path(os.getenv('EPG_DATA_DIR', '/data'))
 
 
 def enqueue(kind, source='', user=None, params=None):
-    selection_key = 'feed_ids' if kind == 'xmltv' else 'channel_ids'
-    if kind in ('epg', 'catalog', 'xmltv') and not source and not (params or {}).get(selection_key):
+    selection_key = {'xmltv':'feed_ids', 'catalog':'sources'}.get(kind, 'channel_ids')
+    explicit_all = kind == 'catalog' and (params or {}).get('all_sources')
+    if kind in ('epg', 'catalog', 'xmltv') and not source and not (params or {}).get(selection_key) and not explicit_all:
         for candidate in Task.objects.filter(kind=kind, source='', status__in=['queued', 'running']).order_by('pk'):
             if not candidate.params.get(selection_key):
                 return candidate, False

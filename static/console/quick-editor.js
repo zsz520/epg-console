@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fill('tvg_id', get('tvg_name').value.trim());
     fill('sort', '其他');
     if (!get('source').value) {
-      const keys = [...get('channel_id').value.matchAll(/<(\w+):[^<>]+>/g)].map(m=>m[1]);
+      let keys=[];
+      try { keys=[...window.EpgSourceMapping.parse(get('channel_id').value).keys()]; } catch { /* The picker displays invalid mapping errors. */ }
       const source = keys.find(key=>[...get('source').options].some(o=>o.value===key));
       if (source) { get('source').value=source; get('source').dispatchEvent(new Event('change',{bubbles:true})); count++; }
     }

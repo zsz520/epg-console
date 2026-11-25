@@ -72,7 +72,7 @@ def initial_run(plan, now, first, kind):
     if first:
         # Preserve the legacy automatic EPG completion anchor on upgrade.
         latest = next((task for task in Task.objects.filter(kind=kind, source='', requested_by__isnull=True).order_by('-created_at')
-                       if not task.params.get('feed_ids' if kind=='xmltv' else 'channel_ids')), None)
+                       if not task.params.get({'xmltv':'feed_ids','catalog':'sources'}.get(kind,'channel_ids'))), None)
         if latest:
             return (latest.finished_at or latest.created_at) + datetime.timedelta(seconds=plan['seconds'])
         if plan['on_start']:
@@ -103,7 +103,7 @@ def tick(now=None):
             # A whole-source manual task covers the same work as an automatic
             # one, regardless of creator or parameters. Partial tasks stay separate.
             pending = Task.objects.filter(kind=kind, source='', status__in=['queued', 'running'])
-            pending = any(not t.params.get('feed_ids' if kind == 'xmltv' else 'channel_ids') for t in pending)
+            pending = any(not t.params.get({'xmltv':'feed_ids','catalog':'sources'}.get(kind,'channel_ids')) for t in pending)
             if not pending:
                 Task.objects.create(kind=kind, params={'automatic': True})
             if plan['mode'] == 'daily':
@@ -123,7 +123,7 @@ def tick(now=None):
 
 def completed(task, now=None):
     """Interval schedules wait a full interval after a whole-source job finishes."""
-    if task.kind not in ('epg', 'catalog', 'xmltv') or task.source or task.params.get('channel_ids') or task.params.get('feed_ids'):
+    if task.kind not in ('epg', 'catalog', 'xmltv') or task.source or task.params.get('channel_ids') or task.params.get('feed_ids') or task.params.get('sources'):
         return
     now = now or timezone.now()
     plan = spec(get_config(), task.kind)
@@ -141,7 +141,7 @@ def summaries(config=None, now=None):
         state = AutoScheduleState.objects.filter(pk=kind).first()
         due = state.next_run if state and matches(state,plan) else None
         pending=next((task for task in Task.objects.filter(kind=kind,source='',status__in=['queued','running']).order_by('pk')
-                      if not task.params.get('feed_ids' if kind == 'xmltv' else 'channel_ids')),None)
+                      if not task.params.get({'xmltv':'feed_ids','catalog':'sources'}.get(kind,'channel_ids'))),None)
         if pending and plan['mode']=='interval': due=None
         result.append({'label': label, 'enabled': plan['enabled'],
                        'pending':pending.get_status_display() if pending else '',

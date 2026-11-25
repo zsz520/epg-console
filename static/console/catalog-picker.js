@@ -59,8 +59,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const text=M.text(next);
       if (text.length>300) throw new Error('来源 ID 超过 300 字符，请减少来源。');
       current=next; valid=true;
-      const first=M.source(next.keys().next().value || '');
+      const first=next.keys().next().value || '';
       const primaryChanged=primary.value!==first;
+      primary.replaceChildren();
+      const automatic=document.createElement('option'); automatic.value=''; automatic.textContent='自动选择第一个来源';
+      primary.append(automatic);
+      for (const [key,identifier] of next) {
+        const option=document.createElement('option');option.value=key;option.textContent=sourceName(M.source(key),identifier);
+        primary.append(option);
+      }
       primary.value=first;
       render();
       writing=true;
@@ -79,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     primary.addEventListener('change',()=>{
       if (writing) return;
       try {
-        if (primary.value && !M.first(current,primary.value)) {
+        if (primary.value && !current.has(primary.value)) {
           notice.textContent='该来源尚无频道 ID，请从目录选择或添加自定义 ID。'; return;
         }
         sync(mapping(),true);
@@ -114,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         writing=true;
         idField.value=M.text(current);
         idField.dispatchEvent(new Event('input',{bubbles:true}));
-        primary.value=M.source(current.keys().next().value || '');
+        primary.value=current.keys().next().value || '';
         writing=false;
         notice.textContent='已调整抓取顺序，松开后请保存频道。';
       }

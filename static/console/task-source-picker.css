@@ -1,0 +1,20 @@
+.task-source-picker { margin-top:16px; }
+.task-source-menu { max-width:680px; border:1px solid #d5dfed; border-radius:8px; background:#fff; }
+.task-source-menu summary { padding:11px 14px; cursor:pointer; color:#345674; }
+.task-source-menu[open] summary { border-bottom:1px solid #e0e7f1; }
+.task-source-menu-body { padding:12px; }
+.task-source-search { width:100%; box-sizing:border-box; }
+.task-source-actions { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+.task-source-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; max-height:280px; overflow:auto; }
+.task-source-option { display:flex; gap:9px; align-items:center; padding:8px; border-radius:6px; cursor:pointer; }
+.task-source-option:hover { background:#edf4fc; }
+.task-source-option small { color:#73849c; margin-left:4px; overflow-wrap:anywhere; }
+.task-source-option[hidden],.task-source-picker[hidden],.task-source-empty[hidden] { display:none; }
+.task-source-selected { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.task-source-chip { display:inline-flex; align-items:center; gap:7px; padding:6px 9px; border-radius:20px; border:1px solid #ccdef6; background:#e8f0fc; color:#315f95; font-size:13px; }
+.task-source-chip.dragging { opacity:.5; }
+.task-source-chip button { background:transparent; border:0; color:inherit; padding:3px 5px; line-height:1.3; cursor:pointer; }
+.task-source-handle { touch-action:none; cursor:grab!important; font-size:18px; }
+.task-source-chip button:focus-visible { outline:2px solid #3982c3; border-radius:4px; }
+.task-source-notice { margin:10px 0 0!important; }
+@media(max-width:640px) { .task-source-options { grid-template-columns:1fr; } .task-source-menu { max-width:none; } }

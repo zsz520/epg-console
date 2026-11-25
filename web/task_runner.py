@@ -62,6 +62,10 @@ def main(pk):
         results = []
         if task.source:
             sources = [task.source]
+        elif task.params.get('sources'):
+            sources = list(dict.fromkeys(task.params['sources']))
+        elif task.params.get('all_sources'):
+            sources = list(SOURCE_NAMES)
         else:
             selected = opts['catalog_sources']
             sources = [key for key in SOURCE_NAMES if key != 'xmltv' and (not selected or key in selected)]

@@ -28,7 +28,7 @@ window.EpgSourceMapping = (() => {
   };
   const first = (mapping, provider) => [...mapping.keys()].find(identity => source(identity) === provider);
   const promote = (mapping, provider, identifier) => {
-    const identity = identifier ? key(provider, identifier) : first(mapping, provider);
+    const identity = identifier ? key(provider, identifier) : (mapping.has(provider) ? provider : first(mapping, provider));
     if (!identity || !mapping.has(identity)) return new Map(mapping);
     return new Map([[identity, mapping.get(identity)], ...[...mapping].filter(([item]) => item !== identity)]);
   };

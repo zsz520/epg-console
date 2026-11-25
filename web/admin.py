@@ -113,7 +113,10 @@ class ChannelAdmin(admin.ModelAdmin):
         return response
 
     def get_changelist_form(self, request, **kwargs):
-        return ChannelListForm
+        names = dict((str(pk), name) for pk, name in XmltvFeed.objects.values_list('pk', 'name'))
+        class RequestChannelListForm(ChannelListForm):
+            xmltv_names = names
+        return RequestChannelListForm
 
     def get_queryset(self, request):
         from .categories import filter_category
@@ -263,11 +266,14 @@ class CrawlLogAdmin(admin.ModelAdmin):
 
 @admin.register(Task, site=console_site)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('id', 'kind', 'source', 'status', 'summary', 'created_at', 'finished_at')
+    list_display = ('id', 'kind', 'source_scope', 'status', 'summary', 'created_at', 'finished_at')
     list_filter = ('kind', 'status')
     ordering = ('-pk',)
-    readonly_fields = [f.name for f in Task._meta.fields]
+    readonly_fields = [f.name for f in Task._meta.fields] + ['source_scope']
 
+    @admin.display(description='来源 / 执行顺序')
+    def source_scope(self, obj):
+        return obj.source_label
 
     def has_add_permission(self, request):
         return False

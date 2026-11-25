@@ -1,7 +1,32 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Channel, Channel_list, RuntimeConfig
-from .catalog import combine, parse_mapping, parse_mapping_entries, mapping_text, SOURCE_NAMES
+from .catalog import combine, parse_mapping_entries, mapping_text, mapping_choices, mapping_choice_key, SOURCE_NAMES
+
+
+def configure_primary_source(form, mapping, explain=True):
+    choices = mapping_choices(mapping, getattr(form, 'xmltv_names', None))
+    available = {key for key, _ in choices}
+    primary = next((mapping_choice_key(source, identifier) for source, identifier in mapping
+                    if source == form.instance.source and mapping_choice_key(source, identifier) in available), '')
+    form.fields['source'] = forms.ChoiceField(label='节目来源', choices=[('', '自动选择第一个来源')] + choices,
+        required=False, help_text='只能选择本频道已添加的来源；选择后移到来源 ID 首位。' if explain else '')
+    form.initial['source'] = primary
+    # Older pages post the generic xmltv provider. Keep their first XML file.
+    key = form.add_prefix('source')
+    if form.is_bound and form.data.get(key) == 'xmltv':
+        xml = next((value for value, _ in choices if value.startswith('xmltv#')), None)
+        if xml:
+            form.data = form.data.copy()
+            form.data[key] = xml
+
+
+def select_primary(mapping, selected):
+    first = next((index for index, (source, identifier) in enumerate(mapping)
+                  if source in SOURCE_NAMES and (mapping_choice_key(source, identifier) == selected or not selected)), None)
+    if first is None:
+        return mapping, ''
+    return [mapping[first], *mapping[:first], *mapping[first+1:]], mapping[first][0]
 
 
 class RuntimeConfigForm(forms.ModelForm):
@@ -103,20 +128,19 @@ class ChannelListForm(forms.ModelForm):
         self.fields['sort'] = forms.CharField(label='频道分类', max_length=50,
             widget=GroupInput(attrs={'placeholder': '选择或输入分组'}))
         try:
-            mapped = parse_mapping(self.instance.channel_id or '')
+            mapped = parse_mapping_entries(self.instance.channel_id or '')
         except ValidationError:
             # Older imports may contain incomplete IDs; keep the table accessible
             # so the channel can be opened and its mapping repaired.
-            mapped = {self.instance.source: ''} if self.instance.source else {}
+            mapped = []
         self.mapped_sources = mapped
-        choices = [(key, label) for key, label in SOURCE_NAMES.items() if key in mapped]
-        self.fields['source'] = forms.ChoiceField(label='节目来源', choices=[('', '自动选择')] + choices, required=False)
+        configure_primary_source(self, mapped, explain=False)
 
     def clean_source(self):
         selected = self.cleaned_data.get('source')
-        if selected:
-            return selected
-        return next((key for key in self.mapped_sources if key in SOURCE_NAMES), '')
+        mapping, provider = select_primary(self.mapped_sources, selected)
+        self.instance.channel_id = mapping_text(mapping)
+        return provider
 
     def _post_clean(self):
         # The changelist only saves changed rows. Unchanged legacy records must
@@ -180,6 +204,15 @@ class ChannelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        try:
+            mapping = parse_mapping_entries(self.data.get(self.add_prefix('channel_id'), '') if self.is_bound else self.instance.channel_id)
+            if self.is_bound:
+                key = self.add_prefix('catalog_entries')
+                ids = self.data.getlist(key) if hasattr(self.data, 'getlist') else self.data.get(key, [])
+                mapping = combine(mapping, Channel_list.objects.filter(pk__in=ids, is_alive=True))
+        except (ValidationError, ValueError, TypeError):
+            mapping = []
+        configure_primary_source(self, mapping)
         self.fields['catalog_entries'].widget.attrs['data-original-mapping'] = self.instance.channel_id or ''
         self.fields['catalog_entries'].widget.attrs['data-channel-pk'] = self.instance.pk or ''
         self.fields['catalog_entries'].widget.attrs['data-search-name'] = (
@@ -202,9 +235,9 @@ class ChannelForm(forms.ModelForm):
         rows = list(cleaned.get('catalog_entries') or [])
         try:
             mapping = combine(parse_mapping_entries(cleaned.get('channel_id', '')), rows)
+            mapping, provider = select_primary(mapping, cleaned.get('source'))
             cleaned['channel_id'] = mapping_text(mapping)
-            if not cleaned.get('source') and mapping:
-                cleaned['source'] = mapping[0][0]
+            cleaned['source'] = provider
         except ValidationError as exc:
             self.add_error('catalog_entries', exc)
         return cleaned

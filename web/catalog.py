@@ -28,7 +28,7 @@ def queue_new_source_catalogs():
     sources, _ = registry()
     existing = set(Channel_list.objects.values_list('source', flat=True).distinct())
     pending = list(Task.objects.filter(kind='catalog', status__in=['queued', 'running']))
-    full_pending = any(not task.source and not task.params.get('channel_ids') for task in pending)
+    full_pending = any(not task.source and not task.params.get('sources') and not task.params.get('channel_ids') for task in pending)
     created = []
     if config.auto_catalog and opts['catalog_refresh_on_restart'] and not pending:
         task, new = enqueue('catalog', params={'startup_refresh': True})
@@ -40,9 +40,11 @@ def queue_new_source_catalogs():
     if not opts['catalog_bootstrap_new_sources']:
         return created
     busy = {task.source for task in pending}
+    busy.update(source for task in pending for source in task.params.get('sources', []))
     # A full refresh may be limited to selected sources. New files outside that
     # range still get their own first catalogue when bootstrapping is enabled.
-    covered = set(opts['catalog_sources'] or sources) if full_pending else set()
+    all_pending = any(task.params.get('all_sources') for task in pending)
+    covered = set(sources if all_pending else (opts['catalog_sources'] or sources)) if full_pending else set()
     attempted = set(Task.objects.filter(kind='catalog', params__startup_catalog=True,
         status__in=['failed', 'cancelled']).values_list('source', flat=True))
     for source, entry in sources.items():
@@ -97,6 +99,20 @@ def parse_mapping(value):
     for source, identifier in parse_mapping_entries(value):
         result.setdefault(source, identifier)
     return result
+
+
+def mapping_choice_key(source, identifier):
+    return f'xmltv#{mapping_key(source, identifier)[1]}' if source == 'xmltv' else source
+
+
+def mapping_choices(mapping, feeds=None):
+    from .models import XmltvFeed
+    if feeds is None:
+        feeds = dict((str(pk), name) for pk, name in XmltvFeed.objects.values_list('pk', 'name')) if any(source=='xmltv' for source,_ in mapping) else {}
+    return [(mapping_choice_key(source, identifier),
+             'XMLTV · ' + feeds.get(identifier.split(':', 1)[0], '文件 ' + identifier.split(':', 1)[0])
+             if source == 'xmltv' else SOURCE_NAMES[source])
+            for source, identifier in mapping if source in SOURCE_NAMES]
 
 
 def mapping_text(mapping):

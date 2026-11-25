@@ -1,4 +1,5 @@
 import datetime
+import json
 from pathlib import Path
 from django.conf import settings
 from django.contrib import messages
@@ -167,7 +168,23 @@ class ConsoleSite(AdminSite):
         source = request.POST.get('source', '') if kind == 'catalog' else ''
         if source and source not in SOURCE_NAMES:
             return JsonResponse({'error': '无效的来源'}, status=400)
-        task, created = enqueue(kind, source, request.user)
+        params = {}
+        if kind == 'catalog' and (request.POST.get('source_picker') == '1' or 'sources' in request.POST):
+            selected = request.POST.getlist('sources')
+            if len(selected) != len(set(selected)) or any(key not in SOURCE_NAMES for key in selected):
+                return JsonResponse({'error': '来源选择无效，请刷新页面后重试。'}, status=400)
+            order = request.POST.get('source_order', '')
+            if order:
+                try:
+                    ordered = json.loads(order)
+                    if not isinstance(ordered, list) or any(not isinstance(key, str) for key in ordered) or len(ordered) != len(selected) or set(ordered) != set(selected):
+                        raise ValueError
+                    selected = ordered
+                except (ValueError, TypeError):
+                    return JsonResponse({'error': '来源顺序无效，请重新选择来源。'}, status=400)
+            source = ''
+            params = {'sources': selected} if selected else {'all_sources': True}
+        task, created = enqueue(kind, source, request.user, params=params)
         messages.success(request, f'任务 #{task.pk} 已加入队列。' if created else f'同类任务 #{task.pk} 已在队列或运行中。')
         return redirect('admin:operation-detail', pk=task.pk)
 

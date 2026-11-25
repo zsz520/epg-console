@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         field.value = M.text(M.promote(M.parse(field.value),target.source,target.identifier));
         field.dispatchEvent(new Event('input',{bubbles:true}));
-        primary.value = target.source;
+        primary.value = M.key(target.source,target.identifier);
         primary.dispatchEvent(new Event('change',{bubbles:true}));
         notice.textContent = `已选择 ${target.source_name} 为主来源，请保存频道。`;
       } catch (error) {notice.textContent = error.message;}
@@ -168,8 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     primary.addEventListener('change', () => {
       const mapping=parse(field.value);
-      const identifier = mapping.get(M.first(mapping,primary.value));
-      const target = targetFor(primary.value,identifier);
+      const source=M.source(primary.value);
+      const identifier = mapping.get(primary.value) || mapping.get(M.first(mapping,source));
+      const target = targetFor(source,identifier);
       if (target) schedule(target);
       else notice.textContent = '请先从来源目录补充该来源的频道 ID，再预览或保存。';
     });
