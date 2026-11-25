@@ -17,12 +17,14 @@ Including another URLconf
 from web.console import console_site
 from django.urls import path
 from django.urls import include
+from django.views.generic.base import RedirectView
 import web.views
 
 urlpatterns = [
     path("", web.views.index),
     path('category/<str:category>/', web.views.index, name='public-category'),
-    path("download/<str:title>", web.views.download),
+    path("epg/<str:title>", web.views.download, name='epg-download'),
+    path("download/<str:title>", RedirectView.as_view(pattern_name='epg-download', permanent=True, query_string=True)),
     path("api/", include("web.urls")),
     path("admin/", console_site.urls),
 ]

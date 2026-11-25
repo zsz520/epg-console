@@ -235,6 +235,65 @@ class ChannelListAdmin(admin.ModelAdmin):
     search_fields = ('out_name', 'out_channel_id', 'normalized_name')
     list_per_page = 50
     readonly_fields = ('normalized_name','regions')
+    actions = ('add_as_one_channel', 'add_as_separate_channels')
+
+    def has_import_channels_permission(self, request):
+        return request.user.has_perm('web.add_channel') and request.user.has_perm('web.change_channel_list')
+
+    @admin.action(description='合并新增为一个频道', permissions=['import_channels'])
+    def add_as_one_channel(self, request, queryset):
+        return self.add_selected_channels(request, queryset, 'merge')
+
+    @admin.action(description='每条分别新增频道', permissions=['import_channels'])
+    def add_as_separate_channels(self, request, queryset):
+        return self.add_selected_channels(request, queryset, 'separate')
+
+    def add_selected_channels(self, request, queryset, mode):
+        from django.core import signing
+        from django.core.exceptions import PermissionDenied, ValidationError
+        from django.db import IntegrityError, OperationalError
+        from django.http import HttpResponseRedirect
+        from django.template.response import TemplateResponse
+        from .catalog_additions import checked_rows, selection_token, load_selection, AdditionForm, plan, apply, LIMIT
+        if not self.has_import_channels_permission(request):
+            raise PermissionDenied
+        token = request.POST.get('selection_token')
+        try:
+            if token:
+                rows = load_selection(token, mode, request.user)
+            else:
+                rows = checked_rows(list(queryset.values_list('pk', flat=True)[:LIMIT+1]))
+                token = selection_token(rows, mode, request.user)
+        except (ValidationError, signing.BadSignature) as exc:
+            message = '确认已失效，请重新选择频道。' if isinstance(exc, signing.BadSignature) else '；'.join(exc.messages)
+            self.message_user(request, message, messages.ERROR)
+            return HttpResponseRedirect(request.get_full_path())
+        confirmed = request.POST.get('confirm_add') == '1'
+        form = AdditionForm(mode, rows, request.POST if confirmed else None)
+        preview, error = [], ''
+        if not confirmed or form.is_valid():
+            values = form.cleaned_data if confirmed else {name: field.initial for name, field in form.fields.items()}
+            try:
+                preview = plan(rows, mode, values)
+                if confirmed:
+                    created = apply(token, mode, request.user, values)
+                    self.message_user(request, f'已新增 {len(created)} 个频道，已有频道保持不变，可到频道列表查看。', messages.SUCCESS)
+                    return HttpResponseRedirect(request.get_full_path())
+            except ValidationError as exc:
+                error = '；'.join(exc.messages)
+            except signing.BadSignature:
+                error = '确认已失效，请返回目录重新选择。'
+            except (IntegrityError, OperationalError):
+                error = '频道数据正在被其他操作修改，本批次未新增，请返回目录重新选择。'
+        return TemplateResponse(request, 'admin/web/channel_list/add_channels.html', {
+            **self.admin_site.each_context(request), 'opts': self.model._meta,
+            'title': '合并新增为一个频道' if mode=='merge' else '每条分别新增频道',
+            'mode': mode, 'form': form, 'rows': rows[:100], 'selected_count': len(rows),
+            'preview': preview[:100], 'new_count': 1 if mode=='merge' else len(rows),
+            'selection_token': token, 'first_id': rows[0].pk,
+            'action_name': 'add_as_one_channel' if mode=='merge' else 'add_as_separate_channels',
+            'error': error,
+        })
 
 
 @admin.register(Epg, site=console_site)

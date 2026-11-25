@@ -22,8 +22,8 @@ IPv6 来源沿用宿主机已有的 IPv6 路由和 NAT 配置。
 
 ## 节目单地址
 
-- XML：`/download/all.xml`
-- XML.GZ：`/download/all.xml.gz`
+- XML：`/epg/all.xml`
+- XML.GZ：`/epg/all.xml.gz`
 - DIYP：`/api/diyp/?ch=频道名&date=YYYYMMDD`
 
 外置来源放入 `data/sources/`，写法见 [新增来源模板说明](新增来源模板说明.md)。
