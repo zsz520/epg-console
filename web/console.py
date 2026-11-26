@@ -200,9 +200,13 @@ class ConsoleSite(AdminSite):
                 stream.seek(max(0, stream.tell() - log_bytes))
                 log = stream.read().decode('utf-8', errors='replace')
         except FileNotFoundError:
-            log = '等待工作进程执行…'
+            log = '等待工作进程执行…' if task.status=='queued' else ('任务运行中，暂未写入日志。' if task.status=='running' else '任务已结束；日志文件不存在或已按保留策略清理。')
+        except OSError:
+            log = '无法读取任务日志，请检查 data/tasks 的目录权限或磁盘状态。'
         if request.GET.get('format') == 'json':
-            return JsonResponse({'status': task.status, 'label': task.get_status_display(), 'summary': task.summary, 'log': log, 'details': task.details})
+            response=JsonResponse({'status': task.status, 'label': task.get_status_display(), 'summary': task.summary, 'log': log, 'details': task.details})
+            response['Cache-Control']='no-store'
+            return response
         return TemplateResponse(request, 'console/task_detail.html', {
             **self.each_context(request), 'title': f'任务 #{task.pk}', 'task': task, 'log': log, 'log_kib':(log_bytes+1023)//1024,
         })

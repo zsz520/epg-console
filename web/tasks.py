@@ -34,6 +34,36 @@ def heartbeat():
 
 
 def run_job(task, stopping):
+    try:
+        _run_job(task, stopping)
+    except Exception as exc:
+        from crawl.source_utils import error_message
+        message='任务启动或执行失败：'+error_message(exc)
+        print(message,flush=True)
+        Task.objects.filter(pk=task.pk,status='running').update(
+            status='failed',summary=message,finished_at=timezone.now())
+
+
+def stop_child(child):
+    """Terminate the complete task process group, including provider subprocesses."""
+    for sig,seconds in ((signal.SIGTERM,5),(signal.SIGKILL,5)):
+        try:
+            os.killpg(child.pid,sig)
+        except ProcessLookupError:
+            pass
+        try:
+            child.wait(timeout=seconds)
+            # The parent may exit before a provider that ignores SIGTERM.
+            try:
+                os.killpg(child.pid,signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            return
+        except subprocess.TimeoutExpired:
+            continue
+
+
+def _run_job(task, stopping):
     from .options import options
     config = get_config()
     opts = options(config)
@@ -43,39 +73,38 @@ def run_job(task, stopping):
     with open(log_dir / f'{task.pk}.log', 'a', encoding='utf-8') as log:
         child = subprocess.Popen([sys.executable, '-m', 'web.task_runner', str(task.pk)],
                                  stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-        deadline = time.monotonic() + timeout
-        reason = ''
-        while child.poll() is None:
-            heartbeat()
-            close_old_connections()
-            from .scheduling import tick
-            try:
-                tick()
-            except Exception as exc:
-                print(f'Scheduler error: {exc}', flush=True)
-            cancelled = Task.objects.filter(pk=task.pk, cancel_requested=True).exists()
-            if cancelled or stopping[0] or time.monotonic() > deadline:
-                reason = '已取消' if cancelled else ('工作进程停止，任务中断，可重新执行' if stopping[0] else f'任务超过 {timeout} 秒')
-                os.killpg(child.pid, signal.SIGTERM)
+        try:
+            deadline = time.monotonic() + timeout
+            reason = ''
+            while child.poll() is None:
+                heartbeat()
+                close_old_connections()
+                from .scheduling import tick
                 try:
-                    child.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    os.killpg(child.pid, signal.SIGKILL)
-                    child.wait()
-                break
-            time.sleep(0.5)
-        task.refresh_from_db()
-        if reason:
-            task.status = 'cancelled' if cancelled else 'failed'
-            task.summary = reason
-        elif child.returncode != 0:
-            task.status = 'failed'
-            task.summary = f'执行异常（退出码 {child.returncode}），请查看日志。'
-        elif task.status == 'running':
-            task.status = 'success'
-            task.summary = '执行完成，请查看日志及来源结果。'
-        task.finished_at = timezone.now()
-        task.save(update_fields=['status', 'summary', 'finished_at'])
+                    tick()
+                except Exception as exc:
+                    print(f'Scheduler error: {exc}', flush=True)
+                cancelled = Task.objects.filter(pk=task.pk, cancel_requested=True).exists()
+                if cancelled or stopping[0] or time.monotonic() > deadline:
+                    reason = '已取消' if cancelled else ('工作进程停止，任务中断，可重新执行' if stopping[0] else f'任务超过 {timeout} 秒')
+                    stop_child(child)
+                    break
+                time.sleep(0.5)
+            task.refresh_from_db()
+            if reason:
+                task.status = 'cancelled' if cancelled else 'failed'
+                task.summary = reason
+            elif child.returncode != 0:
+                task.status = 'failed'
+                task.summary = f'执行异常（退出码 {child.returncode}），请查看日志。'
+            elif task.status == 'running':
+                task.status = 'success'
+                task.summary = '执行完成，请查看日志及来源结果。'
+            task.finished_at = timezone.now()
+            task.save(update_fields=['status', 'summary', 'finished_at'])
+        finally:
+            if child.poll() is None:
+                stop_child(child)
 
 
 def worker():

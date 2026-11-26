@@ -13,7 +13,7 @@ tz_sh = tz.gettz("Asia/Shanghai")
 
 def index(request, category=''):
     from .options import apply_legacy
-    apply_legacy()
+    opts=apply_legacy()
     crawl_days = crawl_info["gen_xml_days"]
     from django.utils import timezone
     today = timezone.localdate()
@@ -38,6 +38,16 @@ def index(request, category=''):
     label = next((label for key, label, _ in PRESETS if key == category), request.GET.get('sort', '') or '全部频道')
     channel_no = info["channels"].count()
     epg_no = info["epg_no"]
+    channels=ordered_channels(channels)
+    visible_count=channels.count()
+    page=None
+    if opts['public_page_size']:
+        from django.core.paginator import Paginator
+        page=Paginator(channels,opts['public_page_size']).get_page(request.GET.get('page'))
+        channels=page.object_list
+    params=request.GET.copy()
+    params.pop('page',None)
+    pagination_query=params.urlencode()
     ret = {
         "channel_no": channel_no,
         "channel_total": Channel.objects.count(),
@@ -46,10 +56,13 @@ def index(request, category=''):
         "start_date": start_date,
         "start_date_no": start_date_no,
         "end_date": end_date,
-        "channels": ordered_channels(channels),
+        "channels": channels,
+        'channel_page':page,
+        'channel_offset':page.start_index()-1 if page else 0,
+        'pagination_query':pagination_query+'&' if pagination_query else '',
         'category_label': label,
         'category_key': category,
-        'visible_channel_count': channels.count(),
+        'visible_channel_count': visible_count,
         'search_query': query,
         "root_dir": root_dir,
         "n": 0,
@@ -58,6 +71,12 @@ def index(request, category=''):
 
 
 def download(requests, title):
+    from django.http import HttpResponseNotAllowed
+    from django.utils.cache import get_conditional_response
+    from django.utils.http import http_date
+    import hashlib
+    if requests.method not in ('GET','HEAD'):
+        return HttpResponseNotAllowed(['GET','HEAD'])
     if title != os.path.basename(title) or title in ('.', '..'):
         raise Http404
     # Keep existing player subscriptions on the current complete export.
@@ -68,8 +87,27 @@ def download(requests, title):
         file = open(os.path.join(root_dir, title), "rb")
     except (FileNotFoundError, IsADirectoryError):
         raise Http404
-    response = FileResponse(file)
-    response["Content-Type"] = "application/octet-stream"
+    try:
+        stat=os.fstat(file.fileno())
+        etag='"'+hashlib.sha256(f'{title}:{stat.st_ino}:{stat.st_mtime_ns}:{stat.st_size}'.encode()).hexdigest()+'"'
+        response=get_conditional_response(requests,etag=etag,last_modified=int(stat.st_mtime))
+        if response is not None:
+            file.close()
+        elif requests.method=='HEAD':
+            file.close()
+            response=HttpResponse()
+        else:
+            response=FileResponse(file)
+        if response.status_code==200:
+            response['Content-Length']=str(stat.st_size)
+            response['Content-Type']='application/gzip' if title.endswith('.gz') else ('application/xml; charset=utf-8' if title.endswith('.xml') else 'application/octet-stream')
+        response['ETag']=etag
+        response['Last-Modified']=http_date(stat.st_mtime)
+        response['Cache-Control']='no-cache'
+        response['X-Content-Type-Options']='nosniff'
+    except Exception:
+        file.close()
+        raise
     return response
 
 

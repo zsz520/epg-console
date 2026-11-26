@@ -62,9 +62,10 @@ def main():
             'message': '' if programmes else message}
         if source == 'xmltv':
             response.update({key: result.get(key) for key in ('origin_updated_at', 'origin_name', 'origin_stale')})
-    except Exception:
+    except Exception as exc:
+        from crawl.source_utils import error_message
         response = {'status': 'error', 'count': 0, 'programmes': [],
-                    'message': '来源请求或节目解析失败，可尝试其他来源。'}
+                    'message': ('来源请求或节目解析失败：' + error_message(exc))[:700]}
     print(json.dumps(response, ensure_ascii=False))
 
 

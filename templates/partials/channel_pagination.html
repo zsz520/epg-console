@@ -1,0 +1,5 @@
+{% if channel_page.has_other_pages %}<nav class="channel-pagination" aria-label="频道分页">
+{% if channel_page.has_previous %}<a href="?{{ pagination_query }}page=1">首页</a><a href="?{{ pagination_query }}page={{ channel_page.previous_page_number }}">上一页</a>{% endif %}
+<span>第 {{ channel_page.number }} / {{ channel_page.paginator.num_pages }} 页 · 共 {{ visible_channel_count }} 个频道</span>
+{% if channel_page.has_next %}<a href="?{{ pagination_query }}page={{ channel_page.next_page_number }}">下一页</a><a href="?{{ pagination_query }}page={{ channel_page.paginator.num_pages }}">末页</a>{% endif %}
+</nav>{% endif %}

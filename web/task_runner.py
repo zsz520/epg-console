@@ -91,18 +91,25 @@ def main(pk):
                     result_file.unlink(missing_ok=True)
                     child = subprocess.run([sys.executable, '-m', 'web.catalog_runner', source, str(result_file)],
                                            timeout=source_timeout)
-                    if child.returncode or not result_file.exists():
+                    if not result_file.exists():
                         raise ValueError(f'来源执行失败（退出码 {child.returncode}），详情见运行日志。')
-                    result = {**json.loads(result_file.read_text(encoding='utf-8')), 'status': 'success', 'attempts': attempt}
+                    payload=json.loads(result_file.read_text(encoding='utf-8'))
+                    if not isinstance(payload,dict):raise ValueError('来源执行结果格式异常。')
+                    if child.returncode or payload.get('status')=='failed':
+                        raise ValueError(payload.get('error') or f'来源执行失败（退出码 {child.returncode}），详情见运行日志。')
+                    result = {**payload, 'status': 'success', 'attempts': attempt}
                     break
                 except Exception as exc:
-                    result = {'source': source, 'status': 'failed', 'error': str(exc)[-1000:], 'attempts': attempt}
+                    from crawl.source_utils import error_message
+                    error=f'单个来源目录抓取超过 {source_timeout} 秒，已保留原目录；可在设置中心调整超时。' if isinstance(exc,subprocess.TimeoutExpired) else error_message(exc)
+                    result = {'source': source, 'status': 'failed', 'error': error, 'attempts': attempt}
                     print(f'{source} 第 {attempt}/{opts["catalog_retries"]} 次获取失败：{exc}', flush=True)
                     if attempt < opts['catalog_retries']:
                         import time
                         time.sleep(opts['catalog_retry_delay_seconds'])
                 finally:
                     result_file.unlink(missing_ok=True)
+            result['name']=SOURCE_NAMES[source]
             results.append(result)
             Task.objects.filter(pk=pk).update(details=results, summary=f'已处理 {len(results)}/{len(sources)} 个来源')
         passed = sum(r['status'] == 'success' for r in results)

@@ -56,6 +56,7 @@ SPECS=[
  ('site_name','网站名称','text',80,'网页与后台'),('admin_name','后台名称','text',80,'网页与后台'),
  ('public_base_url','站点公开地址（可留空）','url',2000,'站点侧栏与接口'),
  ('diyp_default_channel','DIYP 默认频道','channel',100,'站点侧栏与接口'),
+ ('public_page_size','首页每页频道数（0 显示全部）',0,500,'网页与后台'),
  ('public_show_downloads','显示节目单下载卡片','bool',None,'站点侧栏与接口'),
  ('public_download_title','下载卡片标题','text',100,'站点侧栏与接口'),
  ('public_xml_label','XML 下载名称','text',100,'站点侧栏与接口'),
@@ -153,6 +154,7 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['public_base_url'].help_text='留空按当前访问的协议、域名和端口显示完整地址。反向代理需固定外网地址时填写 http(s)://域名:端口，不含路径。'
         self.fields['diyp_default_channel'].help_text='可选择已有频道，或填写 tvg-name / tvg-id；缺少 ch 时使用，默认 CCTV1。缺少 date 时使用北京时间当天，不会触发远程抓取。'
         self.fields['public_show_channel_count'].help_text='后台已配置的频道总数，包含停用频道；不随前台分类或搜索变化。'
+        self.fields['public_page_size'].help_text='默认每页 100 个，减少大量频道时的页面加载；分页保留分类、搜索和后台排序。0 表示不分页。'
         self.fields['public_show_enabled_count'].help_text='当前前台已启用、可展示的频道数，不随分类或搜索变化。'
         self.fields['all_filename'].help_text='默认 all.xml；同时生成同名 .gz 文件。保存后自动提交 XML 生成任务，首页下载地址随之更新；/epg/all.xml 和 /epg/all.xml.gz 仍可使用。'
         self.fields['split_midnight'].help_text='所有来源统一处理；次日 00:00 至首档开始使用前一日末档名称，避免重叠。缺失时段以“精彩继续”补齐，日尾 23:59:59。原始数据保留。'

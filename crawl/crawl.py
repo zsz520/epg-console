@@ -5,7 +5,6 @@ from utils.general import argvs_get, in_exclude_channel
 from utils.aboutdb import log
 from .spiders import epg_func
 from dateutil import tz
-from xml.sax.saxutils import escape
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "epg.settings")
 django.setup()
@@ -237,6 +236,7 @@ def get_epg(channel, dt, func_arg=0, earliest_date=None):
 # 生成某个分类的XML(所有、央视及卫视、地方、海外）
 def gen_xml(sort):
     from web.options import apply_legacy
+    from web.xml_output import text as xml_text, attribute as xml_attribute
     from web.programmes import project
     from types import SimpleNamespace
     opts=apply_legacy()
@@ -268,9 +268,9 @@ def gen_xml(sort):
             and channel.tvg_name not in in_exclude_channel["include_xml"]
         ):
             continue
-        c = '<channel id="%s"><display-name lang="zh">%s</display-name></channel>' % (
-            escape(channel.xmltv_id),
-            escape(channel.tvg_name),
+        c = '<channel id=%s><display-name lang="zh">%s</display-name></channel>' % (
+            xml_attribute(channel.xmltv_id),
+            xml_text(channel.tvg_name),
         )
         f.write(c)
     noepg_channel = (
@@ -285,26 +285,14 @@ def gen_xml(sort):
             epg.endtime=timezone.make_aware(datetime.datetime.combine(epg.program_date,datetime.time(23,59,59)))
         start = epg.starttime.astimezone(tz=tz_sh).strftime("%Y%m%d%H%M%S") + tz
         end = epg.endtime.astimezone(tz=tz_sh).strftime("%Y%m%d%H%M%S") + tz
-        id = escape(xml_ids.get(str(epg.channel_id), str(epg.channel_id)))
+        id = xml_attribute(xml_ids.get(str(epg.channel_id), str(epg.channel_id)))
         from web.text_processing import display_text
         title = display_text(epg.title,opts) + ('' if row.get('gap_filler') else add_info_title)
-        title = (
-            title.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("'", "&apos;")
-            .replace('"', "&quot;")
-        )
+        title = xml_text(title)
         desc = display_text(epg.descr,opts) + add_info_desc
-        desc = (
-            desc.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("'", "&apos;")
-            .replace('"', "&quot;")
-        )
+        desc = xml_text(desc)
         programinfo = (
-            """<programme start="%s" stop="%s" channel="%s"><title lang="zh">%s</title><desc lang="zh">%s</desc></programme>"""
+            """<programme start="%s" stop="%s" channel=%s><title lang="zh">%s</title><desc lang="zh">%s</desc></programme>"""
             % (start, end, id, title, desc)
         )
         f.write(programinfo)

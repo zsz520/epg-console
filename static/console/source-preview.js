@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const compared=new Map();
     let active = 0;
     const inFlight = new Set();
+    const controllers = new Set();
     const waiting = [];
     const el = (tag, text, className) => {
       const node = document.createElement(tag); if (text != null) node.textContent = text;
@@ -98,15 +99,18 @@ document.addEventListener('DOMContentLoaded', () => {
       let card = elements.get(key);
       if (!card) { card = el('article',null,'source-preview-card'); elements.set(key,card); cards.append(card); }
       card.replaceChildren(el('strong',target.source_name), el('p',`正在读取 ${date} 节目，最长等待约 ${root.dataset.previewTimeout || 15} 秒…`));
+      const controller=new AbortController();controllers.add(controller);
+      const timer=setTimeout(()=>controller.abort(),(Number(root.dataset.previewTimeout || 15)+15)*1000);
       try {
         const response = await fetch(root.dataset.previewUrl, {method:'POST',headers:{'Content-Type':'application/json',
           'X-CSRFToken':form.querySelector('[name=csrfmiddlewaretoken]').value},
-          body:JSON.stringify({...target, row:undefined, force, date})});
+          signal:controller.signal,body:JSON.stringify({...target, row:undefined, force, date})});
+        if(response.redirected) throw new Error('登录已过期，请重新登录后刷新页面。');
         if (!response.ok) throw new Error(response.status === 403 ? '没有预览权限或登录已过期，请刷新页面。' : '节目预览失败，请重试。');
         const data=await response.json();
         if(version===generation) paint(card,target,data);
-      } catch (error) { if(version===generation) paint(card,target,{status:'error', message:error.message,programmes:[]}); }
-      finally { inFlight.delete(key); }
+      } catch (error) { if(version===generation) paint(card,target,{status:'error', message:error.name==='AbortError'?'预览请求等待超时，请重新抓取或检查网络。':error.message,programmes:[]}); }
+      finally { clearTimeout(timer);controllers.delete(controller);inFlight.delete(key); }
     };
     const schedule = (target, force=false) => {
       const key=target.source+':'+target.identifier+':'+chosenDate+':'+generation;
@@ -126,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if(dateField.value===chosenDate) return;
       chosenDate=dateField.value;generation++;
+      controllers.forEach(controller=>controller.abort());
       waiting.splice(0);elements.clear();cards.replaceChildren();updateDays();
       const targets=[...compared.values()];
       targets.forEach(target=>schedule(target));

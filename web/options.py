@@ -1,6 +1,6 @@
 """Typed, public runtime knobs. Deployment/security settings remain in Compose."""
 DEFAULTS = {
-    'public_base_url':'', 'diyp_default_channel':'CCTV1',
+    'public_base_url':'', 'diyp_default_channel':'CCTV1', 'public_page_size':100,
     'public_show_downloads':True, 'public_download_title':'节目单下载',
     'public_xml_label':'完整节目单', 'public_gzip_label':'压缩节目单',
     'public_download_note':'抓取完成后自动更新。',

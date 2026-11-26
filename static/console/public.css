@@ -12,4 +12,7 @@ main{max-width:1360px;margin:auto;padding:30px 28px}.site-layout{display:grid;gr
 .side-card .endpoint { margin-top:8px; font-family:Consolas,monospace; font-size:11px; line-height:1.7; word-break:break-word; }
 @media(min-width:641px) and (max-width:1000px){aside{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
 .site-header nav { margin-left:auto; }
+.channel-pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;padding:18px 10px;border-top:1px solid #e2e8f0;font-size:13px}
+.channel-pagination a{padding:7px 12px;border:1px solid #d6e1ed;border-radius:7px;text-decoration:none}
+.channel-pagination a:hover,.channel-pagination a:focus-visible{background:#e5effa}
 @media(max-width:640px){ .site-header { gap:10px; } .public-brand { font-size:18px; } .site-header nav a { padding:8px; } }

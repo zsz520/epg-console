@@ -22,4 +22,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.addEventListener('settings:visibility',update);
   document.querySelector('.settings-clear').addEventListener('click',()=>{search.value='';update();search.focus();});
   update();
+  const form=document.querySelector('.settings-center-form');
+  if(form){
+    const snapshot=()=>JSON.stringify([...new FormData(form).entries()]);
+    const initial=snapshot();let submitting=false;
+    const state=document.createElement('span');state.setAttribute('role','status');state.className='settings-save-state';
+    const submit=form.querySelector('button[type="submit"],input[type="submit"]');
+    submit?.parentElement.append(state);
+    const changed=()=>{state.textContent=snapshot()!==initial?'有未保存的修改':'';};
+    form.addEventListener('input',changed);form.addEventListener('change',changed);
+    window.addEventListener('beforeunload',event=>{if(!submitting && snapshot()!==initial){event.preventDefault();event.returnValue='';}});
+    form.addEventListener('submit',event=>{
+      if(submitting){event.preventDefault();return;}
+      submitting=true;state.textContent='正在保存…';submit?.setAttribute('aria-busy','true');
+    });
+    window.addEventListener('pageshow',()=>{submitting=false;submit?.removeAttribute('aria-busy');changed();});
+  }
 });

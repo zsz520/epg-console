@@ -412,6 +412,12 @@ class Task(models.Model):
             return names.get(self.source, self.source)
         if self.kind == 'catalog':
             return '全部来源' if self.params.get('all_sources') else '按设置范围'
+        if self.kind == 'xmltv':
+            return f"已选 {len(self.params['feed_ids'])} 个 XMLTV 来源" if self.params.get('feed_ids') else '全部已启用 XMLTV 来源'
+        if self.kind == 'xml':
+            return '已配置的 XML 导出文件'
+        if self.kind == 'epg' and self.params.get('channel_ids'):
+            return f"已选 {len(self.params['channel_ids'])} 个频道"
         return '全部 / 已启用频道'
 
 
