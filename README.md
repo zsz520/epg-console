@@ -17,7 +17,7 @@ docker compose up -d
 - 数据保存在本地 `./data`，升级保留原目录映射。
 - 抓取计划及其他功能在后台设置中心配置。
 
-镜像：`zsz520/epg-console:2.12`，也提供 `latest`。
+镜像：`zsz520/epg-console:latest`。
 IPv6 来源沿用宿主机已有的 IPv6 路由和 NAT 配置。
 
 ## 节目单地址
