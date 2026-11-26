@@ -1,5 +1,6 @@
 (() => {
   let timer,loading=false,finished=false;
+  const refreshMs=Math.max(1,Math.min(60,Number(document.querySelector('[data-task-kind]')?.dataset.pollSeconds)||2))*1000;
   const summary=document.getElementById('task-summary');
   const labels={success:'成功',failed:'失败',partial:'部分完成',running:'运行中',queued:'排队中',cancelled:'已取消'};
   const resultLine=result=>{
@@ -39,7 +40,7 @@
       document.getElementById('source-results').replaceChildren(...task.details.map(resultLine));
       finished=!['queued','running'].includes(task.status);
       const cancel=document.getElementById('cancel-task');if(cancel)cancel.hidden=finished;
-      schedule(2000);
+      schedule(refreshMs);
     }catch(error){summary.textContent=error.name==='AbortError'?'进度读取超时，稍后自动重试。':error.message;schedule(5000);}
     finally{clearTimeout(timeout);loading=false;}
   };

@@ -3,6 +3,9 @@ from .forms import RuntimeConfigForm
 from .options import options
 from .models import Channel
 
+CUSTOM_OPTIONS={'preview_past_days','preview_future_days','backup_time','cleanup_time','failure_retry_batch_size',
+                'export_include_placeholder','export_include_logos','export_display_name','public_show_logos',
+                'public_show_empty_categories','task_poll_seconds'}
 
 # key, label, min/max or text marker, section
 SPECS=[
@@ -20,12 +23,14 @@ SPECS=[
  ('auto_retry_failures','自动补抓失败项','bool',None,'失败补抓'),
  ('failure_retry_minutes','失败后等待多少分钟补抓',1,1440,'失败补抓'),
  ('failure_retry_rounds','每项最多自动补抓轮数',1,10,'失败补抓'),
+ ('failure_retry_batch_size','自动补抓每批最多处理项数',1,500,'失败补抓'),
  ('quality_check','启用节目完整性保护','bool',None,'节目完整性'),
  ('quality_min_percent','新节目至少为原条数的百分比',1,100,'节目完整性'),
  ('quality_min_old_count','至少有多少条旧节目才进行检查',1,1000,'节目完整性'),
  ('quality_gap_minutes','允许的最长空缺分钟（0 不检查）',0,1440,'节目完整性'),
  ('auto_backup','每天自动完整备份','bool',None,'备份与清理'),
- ('backup_hour','每日备份时间（北京时间整点）',0,23,'备份与清理'),
+ ('backup_time','每日备份时间（北京时间）','time',None,'备份与清理'),
+ ('cleanup_time','每日清理时间（北京时间，可留空）','time',None,'备份与清理'),
  ('backup_keep','自动清理时保留多少份备份',1,100,'备份与清理'),
  ('auto_cleanup','每天自动清理旧日志与缓存','bool',None,'备份与清理'),
  ('cleanup_log_days','任务日志和抓取日志保留天数',1,365,'备份与清理'),
@@ -42,11 +47,15 @@ SPECS=[
  ('enable_retention','启用历史节目自动清理','bool',None,'抓取与历史'),('retain_days','历史节目保留天数',1,3650,'抓取与历史'),
  ('title_suffix','节目标题附加文字','text',200,'节目与导出'),('description_suffix','节目描述附加文字','text',1000,'节目与导出'),
  ('all_filename','总表导出文件名','file',None,'节目与导出'),
+ ('export_display_name','XML 频道显示名称','display_name',None,'节目与导出'),
+ ('export_include_logos','XML 中导出频道台标','bool',None,'节目与导出'),
+ ('export_include_placeholder','XML 中导出 noepg 占位频道','bool',None,'节目与导出'),
  ('cc_categories','央视/卫视导出分组','categories',None,'节目与导出'),('cc_filename','央视/卫视导出文件名','file',None,'节目与导出'),
  ('local_categories','地方频道导出分组','categories',None,'节目与导出'),('local_filename','地方导出文件名','file',None,'节目与导出'),
  ('overseas_categories','港澳台/海外导出分组','categories',None,'节目与导出'),('overseas_filename','港澳台/海外导出文件名','file',None,'节目与导出'),
  ('exclude_categories','XML 排除分组','categories',None,'节目与导出'),('include_channels','排除分组中仍保留的频道名（每行一个）','lines',None,'节目与导出'),
  ('preview_timeout','单次节目预览超时（秒）',5,90,'节目预览'),('preview_cache_seconds','成功预览缓存（秒，0 不缓存）',0,3600,'节目预览'),
+ ('preview_past_days','节目对比可选过去天数',0,31,'节目预览'),('preview_future_days','节目对比可选未来天数',0,31,'节目预览'),
  ('preview_error_cache_seconds','失败预览缓存（秒，0 不缓存）',0,300,'节目预览'),('preview_concurrency','服务端最多同时预览数',1,3,'节目预览'),
  ('preview_rows','每个来源最多显示节目数',10,5000,'节目预览'),('preview_previous_day','分割模式预览时补查前一天衔接节目','bool',None,'节目预览'),
  ('xmltv_download_mib','XMLTV 下载上限（MiB）',1,1024,'XMLTV 来源抓取'),('xmltv_expanded_mib','XMLTV 展开上限（MiB）',1,4096,'XMLTV 来源抓取'),
@@ -57,6 +66,8 @@ SPECS=[
  ('public_base_url','站点公开地址（可留空）','url',2000,'站点侧栏与接口'),
  ('diyp_default_channel','DIYP 默认频道','channel',100,'站点侧栏与接口'),
  ('public_page_size','首页每页频道数（0 显示全部）',0,500,'网页与后台'),
+ ('public_show_logos','首页显示频道台标','bool',None,'网页与后台'),
+ ('public_show_empty_categories','首页显示没有频道的分类','bool',None,'网页与后台'),
  ('public_show_downloads','显示节目单下载卡片','bool',None,'站点侧栏与接口'),
  ('public_download_title','下载卡片标题','text',100,'站点侧栏与接口'),
  ('public_xml_label','XML 下载名称','text',100,'站点侧栏与接口'),
@@ -77,6 +88,7 @@ SPECS=[
  ('public_stats_note','数据概况说明文案','paragraph',1000,'站点侧栏与接口'),
  ('list_per_page','后台频道每页条数',10,500,'网页与后台'),('catalog_search_limit','每次目录搜索返回条数',10,200,'网页与后台'),
  ('task_log_bytes','任务页面读取日志末尾字节数',1000,200000,'网页与后台'),
+ ('task_poll_seconds','任务进度刷新间隔（秒）',1,60,'网页与后台'),
 ]
 
 
@@ -118,6 +130,8 @@ class SettingsForm(RuntimeConfigForm):
             if kind=='categories': groups.update(self.opts[key])
         for key,label,kind,maximum,_ in SPECS:
             if kind=='bool': field=forms.BooleanField(label=label,required=False)
+            elif kind=='time': field=forms.TimeField(label=label,required=False,input_formats=['%H:%M'],widget=forms.TimeInput(format='%H:%M',attrs={'type':'time','step':60}))
+            elif kind=='display_name': field=forms.ChoiceField(label=label,required=False,choices=[('tvg_name','匹配用的 tvg-name'),('name','频道显示名称')])
             elif kind=='channel': field=forms.CharField(label=label,required=False,max_length=maximum,widget=DefaultChannelInput())
             elif kind=='url': field=forms.URLField(label=label,required=False,max_length=maximum,assume_scheme='https')
             elif kind=='sources':
@@ -155,6 +169,17 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['diyp_default_channel'].help_text='可选择已有频道，或填写 tvg-name / tvg-id；缺少 ch 时使用，默认 CCTV1。缺少 date 时使用北京时间当天，不会触发远程抓取。'
         self.fields['public_show_channel_count'].help_text='后台已配置的频道总数，包含停用频道；不随前台分类或搜索变化。'
         self.fields['public_page_size'].help_text='默认每页 100 个，减少大量频道时的页面加载；分页保留分类、搜索和后台排序。0 表示不分页。'
+        self.fields['public_show_logos'].help_text='关闭后首页不加载外部台标图片，适合网络较慢时使用；不影响频道配置和 XML 导出。'
+        self.fields['public_show_empty_categories'].help_text='仅影响前台分类导航，不隐藏后台分组，也不改变频道顺序。'
+        self.fields['export_display_name'].help_text='只改变 XML 的 display-name，tvg-id 和播放器匹配 ID 保持不变。'
+        self.fields['export_include_logos'].help_text='默认关闭；开启后导出频道配置中的 HTTP/HTTPS 台标地址。'
+        self.fields['export_include_placeholder'].help_text='默认开启，保留 ID 为 9999 的兼容占位频道；与缺失时段“精彩继续”补全开关独立。'
+        self.fields['preview_past_days'].help_text='默认 7 天；0 表示不能选择过去日期。来源是否提供历史节目由接口决定，预览不会写入数据库。'
+        self.fields['preview_future_days'].help_text='默认 7 天；0 表示不能选择未来日期。增加天数不会触发自动抓取，也不保证来源提供对应日期。'
+        self.fields['failure_retry_batch_size'].help_text='默认 50 个频道/日期；仅控制自动补抓每批大小，不改变来源顺序或每个来源的重试次数。'
+        self.fields['backup_time'].help_text='24 小时制，可精确到分钟；需要开启每天自动完整备份。原整点备份时间自动沿用。'
+        self.fields['cleanup_time'].help_text='留空沿用每隔 24 小时清理；填写后按北京时间每日定时，需要开启自动清理。'
+        self.fields['task_poll_seconds'].help_text='默认 2 秒；仅控制任务详情页面刷新频率，不改变后台调度和抓取频率。切换到其他标签页时暂停刷新。'
         self.fields['public_show_enabled_count'].help_text='当前前台已启用、可展示的频道数，不随分类或搜索变化。'
         self.fields['all_filename'].help_text='默认 all.xml；同时生成同名 .gz 文件。保存后自动提交 XML 生成任务，首页下载地址随之更新；/epg/all.xml 和 /epg/all.xml.gz 仍可使用。'
         self.fields['split_midnight'].help_text='所有来源统一处理；次日 00:00 至首档开始使用前一日末档名称，避免重叠。缺失时段以“精彩继续”补齐，日尾 23:59:59。原始数据保留。'
@@ -169,25 +194,36 @@ class SettingsForm(RuntimeConfigForm):
     def clean(self):
         data=super().clean()
         full=self.data.get('_settings_full')=='1'
-        modern=self.data.get('_settings_version') in ('2','3')
-        public_modern=self.data.get('_settings_version')=='3'
+        modern=self.data.get('_settings_version') in ('2','3','4')
+        public_modern=self.data.get('_settings_version') in ('3','4')
         if not full and 'split_midnight' not in self.data:
             data['split_midnight']=self.instance.split_midnight
         if not full and 'fill_programme_gaps' not in self.data:
             data['fill_programme_gaps']=self.instance.fill_programme_gaps
         for key,_,kind,_,_ in SPECS:
             new_option=key.startswith('catalog_') or key in ('xmltv_with_epg','xmltv_with_catalog')
-            preserve_new=(new_option and not modern) or (key.startswith('public_') and not public_modern)
+            preserve_new=(new_option and not modern) or (key.startswith('public_') and not public_modern) or (key in CUSTOM_OPTIONS and self.data.get('_settings_version')!='4')
             if key not in self.data and (not full or kind not in ('bool','categories','lines','sources') or preserve_new):
                 data[key]=self.opts[key]
             if isinstance(kind,int) and data.get(key) is None:
                 data[key]=self.opts[key]
             if kind=='lines' and isinstance(data.get(key),str):
                 data[key]=[line.strip() for line in data[key].splitlines() if line.strip()]
+            if kind=='time' and key in data:
+                value=data[key]
+                data[key]=value.strftime('%H:%M') if hasattr(value,'strftime') else (value or '')
+        if 'backup_time' not in self.data and 'backup_hour' in self.data:
+            try:
+                hour=int(self.data['backup_hour'])
+                if not 0<=hour<=23: raise ValueError
+                data['backup_time']=f'{hour:02d}:00'
+            except (ValueError,TypeError):self.add_error('backup_time','备份小时应为 0 至 23。')
         for key in ('site_name','admin_name'):
             if not data.get(key): self.add_error(key,'名称不能为空。')
         if not data.get('diyp_default_channel'):
             self.add_error('diyp_default_channel','默认频道不能为空。')
+        if not data.get('backup_time'):self.add_error('backup_time','请选择每日备份时间。')
+        if not data.get('export_display_name'):self.add_error('export_display_name','请选择 XML 频道显示名称。')
         if data.get('public_base_url'):
             from .site_context import public_base
             try:

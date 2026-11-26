@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const changeDate=()=>{
       if(!dateField.value || !dateField.checkValidity()){
-        notice.textContent='请选择今天前后 7 天内的日期。';dateField.value=chosenDate;return;
+        notice.textContent=`请选择 ${dateField.min} 至 ${dateField.max} 之间的有效日期。`;dateField.value=chosenDate;return;
       }
       if(dateField.value===chosenDate) return;
       chosenDate=dateField.value;generation++;

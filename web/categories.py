@@ -20,7 +20,10 @@ def navigation(request):
     items = []
     selected_key = (request.resolver_match.kwargs.get('category', '') if request.resolver_match else '') or request.GET.get('category', '')
     selected_sort = request.GET.get('sort', request.GET.get('sort__exact', ''))
+    from .options import options
+    show_empty=not public or options()['public_show_empty_categories']
     for key, label, names in PRESETS:
+        if not show_empty and not sum(counts[n] for n in names):continue
         url = '/category/' + key + '/' if public else reverse('admin:web_channel_changelist') + '?' + urlencode({'category': key})
         items.append({'key': key, 'label': label, 'count': sum(counts[n] for n in names), 'url': url, 'active': key == selected_key})
     local = [{'label': name, 'count': counts[name], 'active': selected_sort == name, 'url': ('/?' if public else reverse('admin:web_channel_changelist') + '?') + urlencode({'sort': name} if public else {'sort__exact': name})}

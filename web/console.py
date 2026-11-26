@@ -94,14 +94,30 @@ class ConsoleSite(AdminSite):
         from .settings_form import SettingsForm
         from .runtime_config import get_config
         from .scheduling import summaries
-        form=SettingsForm(request.POST if request.method=='POST' else None,instance=get_config())
+        from .options import options
+        config=get_config()
+        previous=options(config)
+        previous_projection=(config.split_midnight,config.fill_programme_gaps)
+        form=SettingsForm(request.POST if request.method=='POST' else None,instance=config)
         if request.method=='POST':
             self.require(request,'web.change_runtimeconfig')
             if form.is_valid():
-                form.save()
-                if request.user.has_perm('web.add_task'):
-                    enqueue('xml',user=request.user,params={'settings_update':timezone.now().isoformat()})
-                messages.success(request,'设置已保存；网页立即应用，新任务使用最新参数；XML 更新任务已提交（如有权限）。')
+                saved=form.save()
+                current=options(saved)
+                export_keys={'all_filename','cc_filename','local_filename','overseas_filename','cc_categories','local_categories','overseas_categories',
+                    'exclude_categories','include_channels','export_days','title_suffix','description_suffix','traditional_to_simplified',
+                    'export_display_name','export_include_logos','export_include_placeholder'}
+                unordered={'cc_categories','local_categories','overseas_categories','exclude_categories','include_channels'}
+                changed=previous_projection!=(saved.split_midnight,saved.fill_programme_gaps) or any(
+                    set(previous[key])!=set(current[key]) if key in unordered else previous[key]!=current[key] for key in export_keys)
+                message='设置已保存；网页立即应用，新任务使用最新参数。'
+                if changed:
+                    if request.user.has_perm('web.add_task'):
+                        task,_=enqueue('xml',user=request.user,params={'settings_update':timezone.now().isoformat()})
+                        message+=f' XML 更新任务 #{task.pk} 已提交。'
+                    else:
+                        message+=' 导出设置已改变，请由有任务权限的管理员重新生成 XML。'
+                messages.success(request,message)
                 return redirect('admin:settings-center')
         return TemplateResponse(request,'console/settings.html',{**self.each_context(request),'title':'设置中心',
             'settings_form':form,'settings_sections':form.sections(),'schedule_summaries':summaries()})
@@ -209,6 +225,7 @@ class ConsoleSite(AdminSite):
             return response
         return TemplateResponse(request, 'console/task_detail.html', {
             **self.each_context(request), 'title': f'任务 #{task.pk}', 'task': task, 'log': log, 'log_kib':(log_bytes+1023)//1024,
+            'task_poll_seconds':options()['task_poll_seconds'],
         })
 
     def cancel(self, request, pk):

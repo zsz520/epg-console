@@ -28,7 +28,7 @@ def queue_due(now=None):
     from .tasks import enqueue
     now=now or timezone.now();opts=options()
     if not opts['auto_retry_failures'] or Task.objects.filter(kind='retry',status__in=['queued','running']).exists():return
-    ids=list(eligible(now).filter(next_retry__lte=now,auto_attempts__lt=opts['failure_retry_rounds']).order_by('next_retry').values_list('pk',flat=True)[:50])
+    ids=list(eligible(now).filter(next_retry__lte=now,auto_attempts__lt=opts['failure_retry_rounds']).order_by('next_retry','pk').values_list('pk',flat=True)[:opts['failure_retry_batch_size']])
     if ids:enqueue('retry',params={'failure_ids':ids,'automatic':True})
 
 

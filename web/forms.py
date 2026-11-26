@@ -83,7 +83,7 @@ class RuntimeConfigForm(forms.ModelForm):
         data = super().clean()
         from .scheduling import parse_times
         full = self.data.get('_settings_full') == '1'
-        modern = self.data.get('_settings_version') in ('2','3')
+        modern = self.data.get('_settings_version') in ('2','3','4')
         for key in ('auto_catalog', 'catalog_on_start', 'epg_schedule_mode', 'catalog_schedule_mode',
                     'epg_schedule_times', 'catalog_schedule_times', 'auto_xmltv', 'xmltv_on_start',
                     'xmltv_schedule_mode', 'xmltv_schedule_times'):
@@ -175,7 +175,7 @@ class CatalogPicker(forms.Widget):
         from django.utils import timezone
         import datetime
         today=timezone.localdate()
-        context.update(preview_date=today.isoformat(),preview_min=(today-datetime.timedelta(days=7)).isoformat(),preview_max=(today+datetime.timedelta(days=7)).isoformat())
+        context.update(preview_date=today.isoformat(),preview_min=(today-datetime.timedelta(days=context['preview_past_days'])).isoformat(),preview_max=(today+datetime.timedelta(days=context['preview_future_days'])).isoformat())
         context['sources'] = SOURCE_NAMES.items()
         from .models import XmltvFeed
         import json

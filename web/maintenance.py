@@ -51,16 +51,20 @@ def schedule_maintenance(now=None):
     for kind,enabled in [('backup',opts['auto_backup']),('cleanup',opts['auto_cleanup'])]:
         with transaction.atomic():
             state=AutoScheduleState.objects.filter(kind=kind).first()
-            signature=f'{enabled}:{opts["backup_hour"]}'
+            clock=opts['backup_time'] if kind=='backup' else opts['cleanup_time']
+            signature=f'{enabled}:{clock or "interval-24h"}'
             if not enabled:
                 if state:state.signature=signature;state.save(update_fields=['signature'])
                 continue
-            if not state or state.signature!=signature:
-                local=timezone.localtime(now);when=local.replace(hour=opts['backup_hour'],minute=0,second=0,microsecond=0) if kind=='backup' else local+datetime.timedelta(days=1)
+            local=timezone.localtime(now)
+            when=local+datetime.timedelta(days=1)
+            if clock:
+                hour,minute=map(int,clock.split(':'))
+                when=local.replace(hour=hour,minute=minute,second=0,microsecond=0)
                 if when<=now:when+=datetime.timedelta(days=1)
+            if not state or state.signature!=signature or not state.next_run:
                 AutoScheduleState.objects.update_or_create(kind=kind,defaults={'signature':signature,'next_run':when});continue
             if state.next_run>now:continue
             if not Task.objects.filter(kind=kind,status__in=['queued','running']).exists():enqueue(kind,params={'automatic':True})
-            tomorrow=timezone.localtime(now)+datetime.timedelta(days=1)
-            state.next_run=tomorrow.replace(hour=opts['backup_hour'],minute=0,second=0,microsecond=0) if kind=='backup' else now+datetime.timedelta(days=1)
+            state.next_run=when
             state.save(update_fields=['next_run'])

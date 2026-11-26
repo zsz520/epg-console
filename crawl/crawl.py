@@ -268,15 +268,24 @@ def gen_xml(sort):
             and channel.tvg_name not in in_exclude_channel["include_xml"]
         ):
             continue
-        c = '<channel id=%s><display-name lang="zh">%s</display-name></channel>' % (
+        c = '<channel id=%s><display-name lang="zh">%s</display-name>' % (
             xml_attribute(channel.xmltv_id),
-            xml_text(channel.tvg_name),
+            xml_text(channel.name if opts['export_display_name']=='name' else channel.tvg_name),
         )
-        f.write(c)
+        if opts['export_include_logos'] and channel.logo:
+            from urllib.parse import urlsplit
+            try:
+                logo=urlsplit(channel.logo)
+                if logo.scheme in ('http','https') and logo.hostname:
+                    c += '<icon src=%s/>' % xml_attribute(channel.logo)
+            except ValueError:
+                pass
+        f.write(c+'</channel>')
     noepg_channel = (
         '<channel id="9999"><display-name lang="zh">noepg</display-name></channel>'
     )
-    f.write(noepg_channel)
+    if opts['export_include_placeholder']:
+        f.write(noepg_channel)
     projected=project([epg.to_dict() for epg in epgs],channel_ids=list(xml_ids),date_range=(timezone.localdate(),need_date))
     projected=[row for row in projected if timezone.localdate()<=row['program_date']<=need_date]
     for row in projected:
@@ -296,7 +305,7 @@ def gen_xml(sort):
             % (start, end, id, title, desc)
         )
         f.write(programinfo)
-    for x in range(get_days):
+    for x in range(get_days if opts['export_include_placeholder'] else 0):
         noepg_program_day = noepg(
             "noepg",
             "9999",

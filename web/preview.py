@@ -36,18 +36,20 @@ def run_preview(params, timeout=15):
 
 def resolve_date(value=None):
     from django.core.exceptions import ValidationError
+    from .options import options
     today=timezone.localdate()
     if value is None:
         return today
+    opts=options()
     try:
         if not isinstance(value,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',value):
             raise ValueError
         day=datetime.date.fromisoformat(value)
-        if abs((day-today).days)>7:
+        if not -opts['preview_past_days']<=(day-today).days<=opts['preview_future_days']:
             raise ValueError
         return day
     except ValueError:
-        raise ValidationError('预览日期请选择今天前后 7 天内的有效日期。') from None
+        raise ValidationError(f"预览日期请选择今天之前 {opts['preview_past_days']} 天至之后 {opts['preview_future_days']} 天内的有效日期。") from None
 
 
 def preview(source, identifier, name, force=False, date=None):
