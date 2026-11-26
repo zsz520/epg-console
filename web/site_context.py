@@ -29,8 +29,8 @@ def site_settings(request):
         'public_ui':{key.removeprefix('public_'):value for key,value in opts.items() if key.startswith('public_')},
         'diyp_default_channel':opts['diyp_default_channel'],
         'public_endpoints':{
-            'xml':base + reverse('epg-download',kwargs={'title':'all.xml'}),
-            'gzip':base + reverse('epg-download',kwargs={'title':'all.xml.gz'}),
+            'xml':base + reverse('epg-download',kwargs={'title':opts['all_filename']}),
+            'gzip':base + reverse('epg-download',kwargs={'title':opts['all_filename']+'.gz'}),
             'diyp':diyp,
             'diyp_example':diyp + '?' + urlencode({'ch':opts['diyp_default_channel'],'date':timezone.localdate().strftime('%Y%m%d')}),
         }}

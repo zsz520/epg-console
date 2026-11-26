@@ -34,7 +34,7 @@ DEFAULTS = {
     'task_log_bytes':24000,
     'cc_categories':['央视','卫视'], 'local_categories':['数字付费','辽宁','山东','湖北','四川'],
     'overseas_categories':['香港','澳门','台湾','海外'],
-    'cc_filename':'cc.xml', 'local_filename':'difang.xml', 'overseas_filename':'gat.xml',
+    'all_filename':'all.xml', 'cc_filename':'cc.xml', 'local_filename':'difang.xml', 'overseas_filename':'gat.xml',
     'exclude_categories':[], 'include_channels':[],
 }
 
@@ -51,6 +51,7 @@ def apply_legacy(config=None):
     opts=options(config)
     general.crawl_info.update(max_crawl_days=opts['crawl_days'],gen_xml_days=opts['export_days'],
         del_days=opts['retain_days'],recrawl_days=opts['recrawl_days'],retry_crawl_times=opts['retries'],change_source=int(opts['fallback']))
+    general.xmlinfo['all']['basename']=opts['all_filename']
     for key,prefix in [('yangwei','cc'),('difang','local'),('oversea','overseas')]:
         general.xmlinfo[key].update(basename=opts[prefix+'_filename'],sortname=opts[prefix+'_categories'])
     general.in_exclude_channel.update(xml=opts['exclude_categories'],include_xml=opts['include_channels'])

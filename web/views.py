@@ -60,6 +60,10 @@ def index(request, category=''):
 def download(requests, title):
     if title != os.path.basename(title) or title in ('.', '..'):
         raise Http404
+    # Keep existing player subscriptions on the current complete export.
+    if title in ('all.xml','all.xml.gz'):
+        from .options import options
+        title=options()['all_filename'] + ('.gz' if title.endswith('.gz') else '')
     try:
         file = open(os.path.join(root_dir, title), "rb")
     except (FileNotFoundError, IsADirectoryError):

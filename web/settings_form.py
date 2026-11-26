@@ -41,6 +41,7 @@ SPECS=[
  ('fallback','失败后尝试其他已配置来源','bool',None,'抓取与历史'),
  ('enable_retention','启用历史节目自动清理','bool',None,'抓取与历史'),('retain_days','历史节目保留天数',1,3650,'抓取与历史'),
  ('title_suffix','节目标题附加文字','text',200,'节目与导出'),('description_suffix','节目描述附加文字','text',1000,'节目与导出'),
+ ('all_filename','总表导出文件名','file',None,'节目与导出'),
  ('cc_categories','央视/卫视导出分组','categories',None,'节目与导出'),('cc_filename','央视/卫视导出文件名','file',None,'节目与导出'),
  ('local_categories','地方频道导出分组','categories',None,'节目与导出'),('local_filename','地方导出文件名','file',None,'节目与导出'),
  ('overseas_categories','港澳台/海外导出分组','categories',None,'节目与导出'),('overseas_filename','港澳台/海外导出文件名','file',None,'节目与导出'),
@@ -153,6 +154,7 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['diyp_default_channel'].help_text='可选择已有频道，或填写 tvg-name / tvg-id；缺少 ch 时使用，默认 CCTV1。缺少 date 时使用北京时间当天，不会触发远程抓取。'
         self.fields['public_show_channel_count'].help_text='后台已配置的频道总数，包含停用频道；不随前台分类或搜索变化。'
         self.fields['public_show_enabled_count'].help_text='当前前台已启用、可展示的频道数，不随分类或搜索变化。'
+        self.fields['all_filename'].help_text='默认 all.xml；同时生成同名 .gz 文件。保存后自动提交 XML 生成任务，首页下载地址随之更新；/epg/all.xml 和 /epg/all.xml.gz 仍可使用。'
         self.fields['split_midnight'].help_text='所有来源统一处理；次日 00:00 至首档开始使用前一日末档名称，避免重叠。缺失时段以“精彩继续”补齐，日尾 23:59:59。原始数据保留。'
         self.fields['auto_retry_failures'].help_text='只补抓今天及配置抓取范围内的失败频道/日期；不抓过去日期，不改变来源 ID 顺序。正常整批抓取仍独立执行。保存后对新到期项生效。'
         self.fields['failure_retry_rounds'].help_text='补抓轮数不含原始整批抓取；每轮内部仍使用单来源尝试次数。成功后自动清除失败状态。'
@@ -196,12 +198,13 @@ class SettingsForm(RuntimeConfigForm):
         if data.get('source_timeout_seconds',0)>data.get('catalog_task_timeout_seconds',86400): self.add_error('source_timeout_seconds','单来源目录超时不能超过频道目录整批任务超时。')
         if data.get('xmltv_source_timeout_seconds',0)>data.get('xmltv_task_timeout_seconds',86400): self.add_error('xmltv_source_timeout_seconds','单文件超时不能超过 XMLTV 整批任务超时。')
         import re
-        files=['all.xml']
-        for key in ('cc_filename','local_filename','overseas_filename'):
+        files=[]
+        for key in ('all_filename','cc_filename','local_filename','overseas_filename'):
             value=data.get(key,'')
             if not re.fullmatch(r'[A-Za-z0-9_-]+\.xml',value): self.add_error(key,'使用不含路径的英文、数字、下划线或横线文件名，扩展名 .xml。')
-            files.append(value)
-        if len(set(files))!=4: self.add_error(None,'导出文件名不能重复，也不能与固定的 all.xml 重复。')
+            files.append(value.casefold())
+            if key!='all_filename' and value.casefold()=='all.xml': self.add_error(key,'all.xml 保留为总表兼容地址，请使用其他名称。')
+        if len(set(files))!=4: self.add_error(None,'导出文件名不能重复（不区分大小写）。')
         return data
 
     def save(self,commit=True):
