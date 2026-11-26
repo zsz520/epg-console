@@ -1,4 +1,4 @@
-{% extends 'admin/base_site.html' %}{% block content %}
+{% extends 'admin/base_site.html' %}{% block content_title %}{% endblock %}{% block content %}
 <section class="hero compact"><div><h1>频道导入 / 导出</h1><p>迁移频道配置，或用表格批量修改。包含来源 ID、分组、台标、抓取开关和顺序；不包含节目、账号和来源脚本。</p></div></section>
 <section class="panel"><h2>导出全部频道</h2><p><a class="button" href="{% url 'admin:channel-export' 'json' %}">导出 JSON 完整配置</a> <a class="button" href="{% url 'admin:channel-export' 'csv' %}">导出 CSV 表格</a></p><p>CSV 使用 UTF-8 编码，可在表格软件编辑。迁移时先放好 data/sources/ 来源文件，再导入频道配置。</p></section>
 <section class="panel"><h2>上传并预览</h2><p>按 tvg-id 合并用于迁移，忽略文件内本机 ID；按本机 ID 更新用于修改 tvg-id，并校验 original_tvg_id。两种方式均不删除文件外的频道。</p><p>缺失的列保留现有值；同一文件内 tvg-id 不能重复。修改 CSV 时保留 id、original_tvg_id 和 _escaped 列。数据错误会整批拒绝，不会部分写入。</p>{% if error %}<p class="errornote">{{ error }}</p>{% endif %}<form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}<button type="submit" class="primary">校验并预览导入</button></form></section>

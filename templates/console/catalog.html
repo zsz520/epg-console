@@ -1,4 +1,4 @@
-{% extends 'admin/base_site.html' %}{% block content %}
+{% extends 'admin/base_site.html' %}{% block content_title %}{% endblock %}{% block content %}
 <section class="hero compact"><div><p class="eyebrow">WORKSPACE / SOURCE CATALOGUE</p><h1>发现频道，整合来源。</h1><p>按网站上的名称合并同一频道。统一空白、大小写、全半角和繁简体；保留 HD、4K、地区等区分信息。</p></div><a class="button primary" href="{% url 'admin:web_task_changelist' %}">抓取更多来源 ↗</a></section>
 {% if error %}<div class="errornote">{{ error }}</div>{% endif %}
 <section class="panel"><form method="get" class="toolbar"><input name="q" value="{{ query }}" placeholder="搜索网站上的频道名称…" aria-label="频道名称"><select name="source"><option value="">所有来源</option>{% for key,label in sources %}<option value="{{ key }}" {% if key == source %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="secondary" type="submit">搜索</button><span>{{ page.paginator.count }} 个可用条目</span></form></section>

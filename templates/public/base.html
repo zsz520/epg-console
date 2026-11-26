@@ -1,5 +1,5 @@
 {% load static %}<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}{{ public_site_name }}{% endblock %}</title><link rel="stylesheet" href="{% static 'console/public.css' %}">{% include 'partials/favicon.html' %}</head>
-<body><header><div class="site-header"><a class="public-brand" href="/" aria-label="{{ public_site_name }} 首页"><span class="brand-icon"><img src="{% static 'console/epg-icon.svg' %}" width="36" height="36" alt=""></span>{{ public_site_name }}</a><nav aria-label="站点导航"><a href="/admin/">后台管理 ↗</a></nav></div></header>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}{{ public_site_name }}{% endblock %}</title><link rel="stylesheet" href="{% static 'console/public.css' %}"><link rel="stylesheet" href="{% static 'console/design.css' %}">{% include 'partials/favicon.html' %}</head>
+<body class="epg-app epg-public"><header><div class="site-header"><a class="public-brand" href="/" aria-label="{{ public_site_name }} 首页"><span class="brand-icon"><img src="{% static 'console/epg-icon.svg' %}" width="36" height="36" alt=""></span>{{ public_site_name }}</a><nav aria-label="站点导航"><a href="/admin/">后台管理 ↗</a></nav></div></header>
 {% include 'partials/category_nav.html' %}<main>{% block content %}{% endblock %}</main><footer>EPG Console · 节目数据由所选来源提供</footer>{% include 'partials/back_to_top.html' %}</body></html>
 

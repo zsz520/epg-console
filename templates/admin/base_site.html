@@ -1,7 +1,8 @@
 {% extends "admin/base.html" %}{% load static %}
 {% block title %}{{ title }} · {{ site_title }}{% endblock %}
-{% block responsive %}{{ block.super }}<link rel="stylesheet" href="{% static 'console/console.css' %}"><link rel="stylesheet" href="{% static 'console/slate.css' %}">{% endblock %}
-{% block branding %}<a class="brand" href="{% url 'admin:index' %}"><span class="brand-mark"><img src="{% static 'console/epg-icon.svg' %}" width="36" height="36" alt=""></span><span>{{ site_header }}<small>CHANNEL & PROGRAMME MANAGER</small></span></a>{% endblock %}
+{% block responsive %}{{ block.super }}<link rel="stylesheet" href="{% static 'console/console.css' %}"><link rel="stylesheet" href="{% static 'console/slate.css' %}"><link rel="stylesheet" href="{% static 'console/design.css' %}">{% endblock %}
+{% block bodyclass %}{{ block.super }} epg-app epg-admin{% endblock %}
+{% block branding %}<a class="brand" href="{% url 'admin:index' %}"><span class="brand-mark"><img src="{% static 'console/epg-icon.svg' %}" width="36" height="36" alt=""></span><span>{{ site_header }}<small>频道 · 来源 · 节目单</small></span></a>{% endblock %}
 {% block extrahead %}{{ block.super }}{% include 'partials/favicon.html' %}{% endblock %}
 {% block footer %}{{ block.super }}{% include 'partials/back_to_top.html' %}{% endblock %}
 {% block nav-global %}{% endblock %}
