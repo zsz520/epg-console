@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, FileResponse, Http404
+from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from web.models import Channel, Epg
 from utils.general import noepgjson, crawl_info, root_dir
 from utils.aboutdb import get_html_info
@@ -15,17 +15,19 @@ def index(request, category=''):
     from .options import apply_legacy
     apply_legacy()
     crawl_days = crawl_info["gen_xml_days"]
+    from django.utils import timezone
+    today = timezone.localdate()
     start_date = (
-        datetime.datetime.now()
+        today
         .strftime("%Y{y}%m{m}%d{d}")
         .format(y="年", m="月", d="日")
     )
-    start_date_no = datetime.datetime.now().strftime("%Y%m%d")
-    end_date_date = datetime.datetime.now() + datetime.timedelta(days=crawl_days - 1)
+    start_date_no = today.strftime("%Y%m%d")
+    end_date_date = today + datetime.timedelta(days=crawl_days - 1)
     end_date = (
         (end_date_date).strftime("%Y{y}%m{m}%d{d}").format(y="年", m="月", d="日")
     )
-    info = get_html_info(end_date_date.date())
+    info = get_html_info(end_date_date)
     from .categories import filter_category, PRESETS
     from django.db.models import Q
     channels = filter_category(info['channels'], category, request.GET.get('sort', ''))
@@ -38,6 +40,7 @@ def index(request, category=''):
     epg_no = info["epg_no"]
     ret = {
         "channel_no": channel_no,
+        "channel_total": Channel.objects.count(),
         "crawl_day": crawl_days,
         "epg_no": epg_no,
         "start_date": start_date,
@@ -68,44 +71,27 @@ def download(requests, title):
 
 def diyp(request):
     from .options import apply_legacy
-    apply_legacy()
-
-    if not request.GET.get('ch') or not request.GET.get('date'):
-        return HttpResponse(json.dumps({'error': '需要 ch 和 date 参数'}, ensure_ascii=False), status=400, content_type='application/json')
+    from django.utils import timezone
+    opts = apply_legacy()
+    raw_date = (request.GET.get('date') or '').strip() or timezone.localdate().strftime('%Y%m%d')
     try:
-        date_parts = re.fullmatch(r'(\d{4})-?(\d{2})-?(\d{2})', request.GET['date'])
+        date_parts = re.fullmatch(r'(\d{4})-?(\d{2})-?(\d{2})', raw_date)
         if not date_parts:
             raise ValueError
         datetime.date(*map(int, date_parts.groups()))
     except ValueError:
         return HttpResponse(json.dumps({'error': 'date 应为有效的 YYYYMMDD 或 YYYY-MM-DD 日期'}, ensure_ascii=False), status=400, content_type='application/json')
 
-    tvg_names = request.GET["ch"]
-    # 1. 获取原始的查询字符串
-    query_string = request.META["QUERY_STRING"]
-    # 2. 使用正则表达式进行处理，保留正确的格式
-    # 使用正则表达式进行替换和处理
-    query_string = re.sub(r"CCTV(\d+)\++", r"CCTV-\1+", query_string)
-    query_string = re.sub(r"\+", "%2B", query_string)  # 将剩余的+替换为%2B
-
-    # 3. 手动解析查询字符串，保留特殊字符（包括 '+'）
-    query_params = parse_qs(query_string, keep_blank_values=True)
-    # 4. 标准化 'ch' 参数
-    if "ch" in query_params:
-        tvg_name = query_params["ch"][0]  # 获取 'ch' 参数的第一个值
-        if not Channel.get_spec_channel_strict(Channel,tvg_name).exists():
-            tvg_name = standardize_channel_name(tvg_name)
-        query_params["ch"] = [tvg_name]  # 更新 'ch' 参数值为标准化后的值
-    # 5. 使用更新后的查询参数重新构建查询字符串
-    new_query_string = urlencode(query_params, doseq=True)
-
-    # 6. 更新 request.GET 和 request.META['QUERY_STRING']
-    request.GET = request.GET.copy()  # 复制原始的 GET 参数
-    if "ch" in query_params:
-        request.GET["ch"] = query_params["ch"][0]  # 更新 'ch' 参数的值
-    request.META["QUERY_STRING"] = new_query_string  # 更新查询字符串
-    tvg_name = request.GET["ch"]
-    tvg_date = request.GET["date"]
+    # Preserve a literal '+' in names such as CCTV5+, as well as encoded %2B.
+    query_params = parse_qs(request.META.get('QUERY_STRING','').replace('+','%2B'), keep_blank_values=True)
+    tvg_names = (query_params.get('ch',[''])[0]).strip() or opts['diyp_default_channel']
+    tvg_name = tvg_names
+    if not Channel.get_spec_channel_strict(Channel,tvg_name).exists():
+        tvg_name = standardize_channel_name(tvg_name)
+    request.GET = request.GET.copy()
+    request.GET['ch'] = tvg_name
+    request.GET['date'] = raw_date
+    tvg_date = raw_date
     ret = single_channel_epg(request)
     if ret.get('error_status'):
         return HttpResponse(ret['msg'], status=ret['error_status'], content_type='text/plain; charset=utf-8')
@@ -127,12 +113,7 @@ def diyp(request):
         "date": ret["epg_date"].strftime("%Y-%m-%d"),
         "epg_data": datas,
     }
-    try:
-        j = json.dumps(ret1, ensure_ascii=False)
-    except Exception as e:
-        print(e, datas)
-        j = "abc"
-    return HttpResponse(j, content_type="application/json")
+    return JsonResponse(ret1, json_dumps_params={'ensure_ascii':False})
 
 
 # WEB查询某频道信息接口

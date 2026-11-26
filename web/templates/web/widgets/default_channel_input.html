@@ -1,0 +1,1 @@
+{% include 'django/forms/widgets/input.html' %}<datalist id="{{ channel_list_id }}">{% for channel in channel_choices %}<option value="{{ channel.value }}">{{ channel.label }} · {{ channel.tvg_name }}</option>{% endfor %}</datalist>

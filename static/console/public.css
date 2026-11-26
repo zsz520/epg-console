@@ -8,5 +8,8 @@ main{max-width:1360px;margin:auto;padding:30px 28px}.site-layout{display:grid;gr
 .region-menu a.active { background:#d7e5f4; color:#215b96; font-weight:600; }
 
 .public-help summary { cursor:pointer; font-weight:600; color:#334155; }
+.site-layout.without-sidebar { grid-template-columns:minmax(0,1fr); }
+.side-card .endpoint { margin-top:8px; font-family:Consolas,monospace; font-size:11px; line-height:1.7; word-break:break-word; }
+@media(min-width:641px) and (max-width:1000px){aside{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
 .site-header nav { margin-left:auto; }
 @media(max-width:640px){ .site-header { gap:10px; } .public-brand { font-size:18px; } .site-header nav a { padding:8px; } }

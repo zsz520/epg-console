@@ -1,5 +1,16 @@
 """Typed, public runtime knobs. Deployment/security settings remain in Compose."""
 DEFAULTS = {
+    'public_base_url':'', 'diyp_default_channel':'CCTV1',
+    'public_show_downloads':True, 'public_download_title':'节目单下载',
+    'public_xml_label':'完整节目单', 'public_gzip_label':'压缩节目单',
+    'public_download_note':'抓取完成后自动更新。',
+    'public_show_help':True, 'public_help_title':'接口与使用说明', 'public_help_open':False,
+    'public_help_text':'选择分类或搜索频道，点击频道名称查看每日节目。播放器可使用上方 XMLTV 文件地址。',
+    'public_show_stats':True, 'public_stats_title':'数据概况',
+    'public_show_channel_count':True, 'public_channel_label':'频道总数',
+    'public_show_enabled_count':False, 'public_enabled_label':'已启用频道',
+    'public_show_programme_count':True, 'public_programme_label':'节目记录',
+    'public_stats_note':'节目内容以实际采集结果为准。',
     'catalog_bootstrap_new_sources':True, 'catalog_refresh_on_restart':False,
     'catalog_retry_failed_on_restart':True, 'catalog_sources':[],
     'catalog_retries':1, 'catalog_retry_delay_seconds':1, 'catalog_task_timeout_seconds':3600,

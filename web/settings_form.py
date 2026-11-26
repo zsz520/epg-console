@@ -53,6 +53,26 @@ SPECS=[
  ('xmltv_connect_seconds','XMLTV 连接超时（秒）',1,120,'XMLTV 来源抓取'),('xmltv_read_seconds','XMLTV 读取超时（秒）',1,300,'XMLTV 来源抓取'),
  ('xmltv_snapshot_keep','每个文件保留的成功快照数',1,10,'XMLTV 来源抓取'),('xmltv_snapshot_grace_seconds','旧快照清理等待（秒）',60,86400,'XMLTV 来源抓取'),
  ('site_name','网站名称','text',80,'网页与后台'),('admin_name','后台名称','text',80,'网页与后台'),
+ ('public_base_url','站点公开地址（可留空）','url',2000,'站点侧栏与接口'),
+ ('diyp_default_channel','DIYP 默认频道','channel',100,'站点侧栏与接口'),
+ ('public_show_downloads','显示节目单下载卡片','bool',None,'站点侧栏与接口'),
+ ('public_download_title','下载卡片标题','text',100,'站点侧栏与接口'),
+ ('public_xml_label','XML 下载名称','text',100,'站点侧栏与接口'),
+ ('public_gzip_label','XML.GZ 下载名称','text',100,'站点侧栏与接口'),
+ ('public_download_note','下载卡片说明','paragraph',1000,'站点侧栏与接口'),
+ ('public_show_help','显示接口与使用说明','bool',None,'站点侧栏与接口'),
+ ('public_help_title','接口说明标题','text',100,'站点侧栏与接口'),
+ ('public_help_open','默认展开接口说明','bool',None,'站点侧栏与接口'),
+ ('public_help_text','接口使用说明文案','paragraph',2000,'站点侧栏与接口'),
+ ('public_show_stats','显示数据概况卡片','bool',None,'站点侧栏与接口'),
+ ('public_stats_title','数据概况标题','text',100,'站点侧栏与接口'),
+ ('public_show_channel_count','显示频道总数','bool',None,'站点侧栏与接口'),
+ ('public_channel_label','频道总数名称','text',100,'站点侧栏与接口'),
+ ('public_show_enabled_count','显示已启用频道数','bool',None,'站点侧栏与接口'),
+ ('public_enabled_label','已启用频道数名称','text',100,'站点侧栏与接口'),
+ ('public_show_programme_count','显示节目记录数','bool',None,'站点侧栏与接口'),
+ ('public_programme_label','节目记录数名称','text',100,'站点侧栏与接口'),
+ ('public_stats_note','数据概况说明文案','paragraph',1000,'站点侧栏与接口'),
  ('list_per_page','后台频道每页条数',10,500,'网页与后台'),('catalog_search_limit','每次目录搜索返回条数',10,200,'网页与后台'),
  ('task_log_bytes','任务页面读取日志末尾字节数',1000,200000,'网页与后台'),
 ]
@@ -71,6 +91,19 @@ class CategoryPicker(forms.CheckboxSelectMultiple):
         return context
 
 
+class DefaultChannelInput(forms.TextInput):
+    template_name='web/widgets/default_channel_input.html'
+
+    def get_context(self,name,value,attrs):
+        context=super().get_context(name,value,attrs)
+        list_id=context['widget']['attrs'].get('id',name)+'-channels'
+        context['widget']['attrs']['list']=list_id
+        context['channel_list_id']=list_id
+        context['channel_choices']=[{'value':identity or tvg_name,'label':label,'tvg_name':tvg_name}
+            for identity,tvg_name,label in Channel.objects.order_by('name','pk').values_list('tvg_id','tvg_name','name')]
+        return context
+
+
 class SettingsForm(RuntimeConfigForm):
     class Meta(RuntimeConfigForm.Meta):
         fields=RuntimeConfigForm.Meta.fields+('split_midnight','fill_programme_gaps')
@@ -83,15 +116,17 @@ class SettingsForm(RuntimeConfigForm):
             if kind=='categories': groups.update(self.opts[key])
         for key,label,kind,maximum,_ in SPECS:
             if kind=='bool': field=forms.BooleanField(label=label,required=False)
+            elif kind=='channel': field=forms.CharField(label=label,required=False,max_length=maximum,widget=DefaultChannelInput())
+            elif kind=='url': field=forms.URLField(label=label,required=False,max_length=maximum,assume_scheme='https')
             elif kind=='sources':
                 from crawl.source_registry import get_source_names
                 names={key:value for key,value in get_source_names().items() if key!='xmltv'}
                 for source in self.opts[key]: names.setdefault(source,source+'（未加载）')
                 field=forms.MultipleChoiceField(label=label,choices=list(names.items()),required=False,widget=CategoryPicker(group_label='来源'))
             elif kind=='categories': field=forms.MultipleChoiceField(label=label,choices=[(v,v) for v in sorted(groups) if v],required=False,widget=CategoryPicker(group_label=label))
-            elif kind in ('text','file','lines'):
+            elif kind in ('text','file','lines','paragraph'):
                 field=forms.CharField(label=label,required=False,max_length=maximum or 10000,
-                    widget=forms.Textarea(attrs={'rows':3}) if kind=='lines' else forms.TextInput())
+                    widget=forms.Textarea(attrs={'rows':3}) if kind in ('lines','paragraph') else forms.TextInput())
             else: field=forms.IntegerField(label=label,required=False,min_value=kind,max_value=maximum)
             field.initial='\n'.join(self.opts[key]) if kind=='lines' else self.opts[key]
             self.fields[key]=field
@@ -114,6 +149,10 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['xmltv_with_epg'].help_text='保留旧版默认行为。关闭后节目单任务读取已有 XMLTV 快照；请通过独立计划或手动更新保持快照最新。'
         self.fields['xmltv_with_catalog'].help_text='只对整批频道目录任务生效；手动指定 XMLTV 更新仍可执行。'
         self.fields['xmltv_source_timeout_seconds'].help_text='含下载、解压和索引；与脚本来源目录超时分开。失败保留最近成功快照。'
+        self.fields['public_base_url'].help_text='留空按当前访问的协议、域名和端口显示完整地址。反向代理需固定外网地址时填写 http(s)://域名:端口，不含路径。'
+        self.fields['diyp_default_channel'].help_text='可选择已有频道，或填写 tvg-name / tvg-id；缺少 ch 时使用，默认 CCTV1。缺少 date 时使用北京时间当天，不会触发远程抓取。'
+        self.fields['public_show_channel_count'].help_text='后台已配置的频道总数，包含停用频道；不随前台分类或搜索变化。'
+        self.fields['public_show_enabled_count'].help_text='当前前台已启用、可展示的频道数，不随分类或搜索变化。'
         self.fields['split_midnight'].help_text='所有来源统一处理；次日 00:00 至首档开始使用前一日末档名称，避免重叠。缺失时段以“精彩继续”补齐，日尾 23:59:59。原始数据保留。'
         self.fields['auto_retry_failures'].help_text='只补抓今天及配置抓取范围内的失败频道/日期；不抓过去日期，不改变来源 ID 顺序。正常整批抓取仍独立执行。保存后对新到期项生效。'
         self.fields['failure_retry_rounds'].help_text='补抓轮数不含原始整批抓取；每轮内部仍使用单来源尝试次数。成功后自动清除失败状态。'
@@ -126,14 +165,16 @@ class SettingsForm(RuntimeConfigForm):
     def clean(self):
         data=super().clean()
         full=self.data.get('_settings_full')=='1'
-        modern=self.data.get('_settings_version')=='2'
+        modern=self.data.get('_settings_version') in ('2','3')
+        public_modern=self.data.get('_settings_version')=='3'
         if not full and 'split_midnight' not in self.data:
             data['split_midnight']=self.instance.split_midnight
         if not full and 'fill_programme_gaps' not in self.data:
             data['fill_programme_gaps']=self.instance.fill_programme_gaps
         for key,_,kind,_,_ in SPECS:
             new_option=key.startswith('catalog_') or key in ('xmltv_with_epg','xmltv_with_catalog')
-            if key not in self.data and (not full or kind not in ('bool','categories','lines','sources') or (new_option and not modern)):
+            preserve_new=(new_option and not modern) or (key.startswith('public_') and not public_modern)
+            if key not in self.data and (not full or kind not in ('bool','categories','lines','sources') or preserve_new):
                 data[key]=self.opts[key]
             if isinstance(kind,int) and data.get(key) is None:
                 data[key]=self.opts[key]
@@ -141,6 +182,14 @@ class SettingsForm(RuntimeConfigForm):
                 data[key]=[line.strip() for line in data[key].splitlines() if line.strip()]
         for key in ('site_name','admin_name'):
             if not data.get(key): self.add_error(key,'名称不能为空。')
+        if not data.get('diyp_default_channel'):
+            self.add_error('diyp_default_channel','默认频道不能为空。')
+        if data.get('public_base_url'):
+            from .site_context import public_base
+            try:
+                data['public_base_url']=public_base(data['public_base_url'])
+            except ValueError:
+                self.add_error('public_base_url','填写 http(s)://域名:端口，不包含账号、路径、查询参数或片段。')
         if data.get('export_days',1)>data.get('crawl_days',31): self.add_error('export_days','导出天数不能超过抓取天数。')
         if data.get('recrawl_days',1)>data.get('crawl_days',31): self.add_error('recrawl_days','重新抓取天数不能超过抓取天数。')
         if data.get('xmltv_expanded_mib',4096)<data.get('xmltv_download_mib',1): self.add_error('xmltv_expanded_mib','展开上限不能小于下载上限。')
