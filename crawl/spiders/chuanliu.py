@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
-from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
-import datetime, os
+from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI, SourceError
+import datetime, json, os, re
 # 默认授权集中在本文件；仍可通过 CHUANLIU_AUTHORIZATION 环境变量覆盖。
 DEFAULT_AUTHORIZATION = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI5ODQwODlhNjc1OGU0ZjJlOTViMjk4NWM4YjA1MDNmYiIsImNvbXBhbnkiOiJxaXlpIiwibmFtZSI6InRlcm1pbmFsIn0.1gDPpBcHJIE8dLiq7UekUlPWMtJOYymI8zoIYlsVgc4'
 
@@ -13,57 +13,96 @@ def authorization_headers():
     return {'Authorization': value, 'User-Agent': 'okhttp/3.10.0.7'}
 
 
+def read_payload(response):
+    try:
+        try:
+            payload = json.loads(response.content)
+        except UnicodeDecodeError:
+            payload = json.loads(response.content.decode('gb18030'))
+    except (ValueError, UnicodeError):
+        raise SourceError('接口未返回有效 JSON，可能返回错误或验证页面。') from None
+    if not isinstance(payload, dict):
+        raise SourceError('接口返回结构异常，未覆盖原数据。')
+    code = payload.get('ret_status')
+    if code not in (None, 0, '0'):
+        message = str(payload.get('ret_msg') or '接口业务错误。')[:200]
+        auth = bool(re.search(r'token|auth|登录|鉴权|授权|认证|过期', message, re.I))
+        raise SourceError(f'接口业务错误 {code}：{message}', ban=int(auth))
+    if 'ret_data' not in payload:
+        raise SourceError('接口缺少 ret_data 字段，返回结构异常。')
+    return payload
+
+
+def parse_programmes_chuanliu(payload, channel, channel_id, day):
+    rows = payload.get('ret_data')
+    if rows is None or rows == []:
+        raise SourceError(f'频道 {channel_id} 在 {day} 暂无节目：接口请求成功，但未提供该日期节目。')
+    if not isinstance(rows, list):
+        raise SourceError('接口节目数据不是列表，未覆盖原数据。')
+    records = {}
+    zero = duplicates = repaired = 0
+    for number, item in enumerate(rows, 1):
+        if not isinstance(item, dict):
+            raise SourceError(f'第 {number} 条节目结构无效。')
+        if item.get('channel') is not None and str(item['channel']) != str(channel_id):
+            raise SourceError('接口返回了其他频道的节目，未写入。')
+        try:
+            start = datetime.datetime.strptime(item['begin_time'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=SHANGHAI)
+        except (KeyError, TypeError, ValueError):
+            raise SourceError(f'第 {number} 条节目开始时间无效。') from None
+        try:
+            stop = datetime.datetime.strptime(item.get('end_time'), '%Y-%m-%d %H:%M:%S').replace(tzinfo=SHANGHAI)
+        except (TypeError, ValueError):
+            stop = None
+        # The provider emits duplicate event markers whose start equals stop.
+        # Remove these before common inference turns them into ambiguous rows.
+        if stop == start:
+            zero += 1
+            continue
+        if stop is not None and stop < start:
+            stop = None
+            repaired += 1
+        title = str(item.get('name') or '').strip()
+        if not title:
+            raise SourceError(f'第 {number} 条节目名称为空。')
+        row = {'channel_id': channel.id, 'starttime': start, 'endtime': stop,
+            'title': title, 'desc': str(item.get('desc') or ''), 'program_date': start.date()}
+        previous = records.get(start)
+        if previous:
+            if previous['title'] != title or (previous['endtime'] and stop and previous['endtime'] != stop):
+                raise SourceError(f'频道 {channel_id} 在 {start:%Y-%m-%d %H:%M:%S} 有多条不同的有效节目，无法确定，保留原节目。')
+            # Same programme: retain the explicit valid stop and richer description.
+            previous['endtime'] = previous['endtime'] or stop
+            if len(row['desc']) > len(previous['desc']):
+                previous['desc'] = row['desc']
+            duplicates += 1
+        else:
+            records[start] = row
+    result = sorted(records.values(), key=lambda row: row['starttime'])
+    if not result:
+        raise SourceError(f'频道 {channel_id} 在 {day} 只有零时长标记，没有有效节目。')
+    notes = [f'获取 {len(result)} 条节目。']
+    if zero:
+        notes.append(f'已跳过 {zero} 条零时长记录。')
+    if duplicates:
+        notes.append(f'已合并 {duplicates} 条同节目重复记录。')
+    if repaired:
+        notes.append(f'{repaired} 条结束时间异常，交由公共逻辑推断。')
+    return result, ''.join(notes)
+
+
 @programme_result('川流 TV')
 def get_epgs_chuanliu(channel, channel_id, dt, func_arg):
-    epgs = []
-    msg = ""
-    success = 1
+    if not re.fullmatch(r'\d+', str(channel_id)):
+        raise SourceError('频道 ID 应为单个数字 ID，例如 3342。')
     need_date = dt.strftime("%Y-%m-%d")
     url = (
         "http://epg.iqy.sc96655.com/v1/getPrograms?channel=%s&begin_time=%s 00:00:00&end_time=%s 23:59:59&partner=2"
         % (channel_id, need_date, need_date)
     )
-    try:
-        res = requests.get(url, headers=authorization_headers(), timeout=5)
-        res.raise_for_status()
-        res.encoding = "utf-8"
-        ret_data = res.json()["ret_data"]
-        if not isinstance(ret_data, list):
-            raise ValueError('川流接口未返回节目列表，请检查 token 与接口状态。')
-        n = 0  # 计数 节目表的第几个节目
-        for j in ret_data:
-            n += 1
-            title = j["name"]
-            channel_name = j["bd_name"]
-            desc = j.get("desc") or ""
-            starttime = j["begin_time"]  # 2023-02-18 15:42:00'
-            endtime = j["end_time"]
-            starttime = datetime.datetime.strptime(starttime, "%Y-%m-%d %H:%M:%S")
-            try:
-                endtime = datetime.datetime.strptime(endtime, "%Y-%m-%d %H:%M:%S")
-            except (TypeError, ValueError):
-                endtime = None
-            epg = {
-                "channel_id": channel.id,
-                "starttime": starttime,
-                "endtime": endtime,
-                "title": title,
-                "desc": desc,
-                "program_date": dt,
-            }
-            epgs.append(epg)
-    except Exception as e:
-        success = 0
-        spidername = os.path.basename(__file__).split(".")[0]
-        msg = "spider-%s- %s" % (spidername, e)
-    ret = {
-        "success": success,
-        "epgs": epgs,
-        "msg": msg,
-        "last_program_date": dt,
-        "ban": 0,
-    }
-    return ret
+    res = requests.get(url, headers=authorization_headers(), timeout=(8, 15))
+    epgs, message = parse_programmes_chuanliu(read_payload(res), channel, channel_id, dt)
+    return {'success': 1, 'epgs': epgs, 'msg': message, 'last_program_date': dt, 'ban': 0}
 
 
 """
@@ -87,11 +126,10 @@ def get_channels_chuanliu():
     url = "http://epg.iqy.sc96655.com/v1/getChannels?partner=2&terminal=&definition=&citycode=&adcode=&charge_type=&channel_type="
     res = requests.get(url, headers=authorization_headers(), timeout=10)
     res.raise_for_status()
-    res.encoding = "utf-8"
-    j = res.json()
+    j = read_payload(res)
     ret_data = j["ret_data"]
     if not isinstance(ret_data, list):
-        raise ValueError('川流接口未返回频道列表，请检查 token 与接口状态。')
+        raise ValueError('接口请求成功，但没有提供有效频道目录。')
     for c in ret_data:
         name = c["bd_name"]
         name2 = c["name"]
@@ -115,7 +153,7 @@ def get_channels_chuanliu():
 def get_sorts_type():
     url = "http://epg.iqy.sc96655.com/v1/getChannelType?partner=2&terminal="
     res = requests.get(url, headers=authorization_headers(), timeout=10)
-    ret_data = res.json()["ret_data"]
+    ret_data = read_payload(res)["ret_data"]
     n = 0
     for j in ret_data:
         if n == 0:
