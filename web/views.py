@@ -112,6 +112,11 @@ def download(requests, title):
 
 
 def diyp(request):
+    from .options import options
+    if not options()['diyp_enabled']:
+        response = JsonResponse({'error':'DIYP 接口已由管理员关闭。'},status=403,json_dumps_params={'ensure_ascii':False})
+        response['Cache-Control']='no-store'
+        return response
     from .options import apply_legacy
     from django.utils import timezone
     opts = apply_legacy()
@@ -160,6 +165,11 @@ def diyp(request):
 
 # WEB查询某频道信息接口
 def web_single_channel_epg(request):
+    from .options import options
+    if not options()['web_api_enabled']:
+        response = HttpResponse('Web API（网页节目详情）已由管理员关闭。',status=403,content_type='text/plain; charset=utf-8')
+        response['Cache-Control']='no-store'
+        return response
     ret = single_channel_epg(request)
     if ret.get('error_status'):
         return HttpResponse(ret['msg'], status=ret['error_status'], content_type='text/plain; charset=utf-8')

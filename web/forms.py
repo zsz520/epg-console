@@ -83,7 +83,7 @@ class RuntimeConfigForm(forms.ModelForm):
         data = super().clean()
         from .scheduling import parse_times
         full = self.data.get('_settings_full') == '1'
-        modern = self.data.get('_settings_version') in ('2','3','4')
+        modern = self.data.get('_settings_version') in ('2','3','4','5')
         for key in ('auto_catalog', 'catalog_on_start', 'epg_schedule_mode', 'catalog_schedule_mode',
                     'epg_schedule_times', 'catalog_schedule_times', 'auto_xmltv', 'xmltv_on_start',
                     'xmltv_schedule_mode', 'xmltv_schedule_times'):

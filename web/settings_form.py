@@ -9,6 +9,8 @@ CUSTOM_OPTIONS={'preview_past_days','preview_future_days','backup_time','cleanup
 
 # key, label, min/max or text marker, section
 SPECS=[
+ ('diyp_enabled','启用 DIYP 接口','bool',None,'接口访问控制'),
+ ('web_api_enabled','启用 Web API（网页节目详情）','bool',None,'接口访问控制'),
  ('catalog_bootstrap_new_sources','新来源首次自动抓取目录','bool',None,'频道列表自动抓取'),
  ('catalog_retry_failed_on_restart','重启后重试首次目录抓取失败的来源','bool',None,'频道列表自动抓取'),
  ('catalog_refresh_on_restart','每次重启刷新频道目录','bool',None,'频道列表自动抓取'),
@@ -167,6 +169,8 @@ class SettingsForm(RuntimeConfigForm):
         self.fields['xmltv_source_timeout_seconds'].help_text='含下载、解压和索引；与脚本来源目录超时分开。失败保留最近成功快照。'
         self.fields['public_base_url'].help_text='留空按当前访问的协议、域名和端口显示完整地址。反向代理需固定外网地址时填写 http(s)://域名:端口，不含路径。'
         self.fields['diyp_default_channel'].help_text='可选择已有频道，或填写 tvg-name / tvg-id；缺少 ch 时使用，默认 CCTV1。缺少 date 时使用北京时间当天，不会触发远程抓取。'
+        self.fields['diyp_enabled'].help_text='关闭后 /api/diyp/ 对所有访问者返回 403，隐藏首页接口地址；保存立即生效，不影响 XML 下载或后台抓取。'
+        self.fields['web_api_enabled'].help_text='关闭后 /api/web/ 对所有访问者返回 403，首页频道不再提供节目详情链接；不影响后台节目预览、DIYP 或 XML 下载。'
         self.fields['public_show_channel_count'].help_text='后台已配置的频道总数，包含停用频道；不随前台分类或搜索变化。'
         self.fields['public_page_size'].help_text='默认每页 100 个，减少大量频道时的页面加载；分页保留分类、搜索和后台排序。0 表示不分页。'
         self.fields['public_show_logos'].help_text='关闭后首页不加载外部台标图片，适合网络较慢时使用；不影响频道配置和 XML 导出。'
@@ -194,15 +198,15 @@ class SettingsForm(RuntimeConfigForm):
     def clean(self):
         data=super().clean()
         full=self.data.get('_settings_full')=='1'
-        modern=self.data.get('_settings_version') in ('2','3','4')
-        public_modern=self.data.get('_settings_version') in ('3','4')
+        modern=self.data.get('_settings_version') in ('2','3','4','5')
+        public_modern=self.data.get('_settings_version') in ('3','4','5')
         if not full and 'split_midnight' not in self.data:
             data['split_midnight']=self.instance.split_midnight
         if not full and 'fill_programme_gaps' not in self.data:
             data['fill_programme_gaps']=self.instance.fill_programme_gaps
         for key,_,kind,_,_ in SPECS:
             new_option=key.startswith('catalog_') or key in ('xmltv_with_epg','xmltv_with_catalog')
-            preserve_new=(new_option and not modern) or (key.startswith('public_') and not public_modern) or (key in CUSTOM_OPTIONS and self.data.get('_settings_version')!='4')
+            preserve_new=(new_option and not modern) or (key.startswith('public_') and not public_modern) or (key in CUSTOM_OPTIONS and self.data.get('_settings_version') not in ('4','5')) or (key in ('diyp_enabled','web_api_enabled') and self.data.get('_settings_version')!='5')
             if key not in self.data and (not full or kind not in ('bool','categories','lines','sources') or preserve_new):
                 data[key]=self.opts[key]
             if isinstance(kind,int) and data.get(key) is None:
