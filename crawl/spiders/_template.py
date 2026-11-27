@@ -1,10 +1,11 @@
 """新增来源示例：复制为 example.py 后，按真实接口修改配置和两个解析函数。
 
-下划线开头文件不注册；完成后保存为 data/sources/example.py，重启 web/crawler 自动注册。示例地址不可用。
+下划线开头文件不注册；完成后保存为 data/sources/example.py，重启 web 容器自动注册。示例地址不可用。
 接口示例数据格式见项目根目录《新增来源模板说明.md》。
 """
 import datetime
 from zoneinfo import ZoneInfo
+from urllib.parse import urljoin, urlsplit
 import requests
 
 SOURCE_ID = 'example'
@@ -13,6 +14,16 @@ CHANNELS_URL = 'https://example.invalid/api/channels'
 EPG_URL = 'https://example.invalid/api/programmes'
 ZONE = ZoneInfo('Asia/Shanghai')
 HEADERS = {'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'}
+# 来源统一使用同一台标时填写完整图片地址；每频道台标优先。
+DEFAULT_LOGO = ''
+
+
+def logo_url(value):
+    """相对/协议相对路径转完整 URL；无台标留空，不填网页或自行猜图片。"""
+    value=str(value or '').strip()
+    if not value:return ''
+    url=urljoin(CHANNELS_URL,value)
+    return url if urlsplit(url).scheme in ('http','https') else ''
 
 
 def fetch_json(url, params=None):
@@ -31,7 +42,7 @@ def fetch_json(url, params=None):
 
 
 def parse_channels(payload):
-    """示例格式：{'data': [{'id': '001', 'name': '示例频道', 'category': '地方'}]}。"""
+    """示例 data 每条包含 id、name、category，可选 logo 图片地址。"""
     rows = payload.get('data') if isinstance(payload, dict) else None
     if not isinstance(rows, list) or not rows:
         raise ValueError(f'{SOURCE_NAME} 没有返回有效频道目录，保留原目录。')
@@ -47,7 +58,7 @@ def parse_channels(payload):
             'source': SOURCE_ID,
             'sort': str(row.get('category') or '其他'),
             'url': '',
-            'logo': str(row.get('logo') or ''),
+            'logo': logo_url(row.get('logo') or DEFAULT_LOGO),
             'desc': '',
         }
     return list(channels.values())

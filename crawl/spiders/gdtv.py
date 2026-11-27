@@ -4,6 +4,8 @@ from crawl.source_utils import source_http as requests, programme_result, catalo
 import datetime, os
 import xml.etree.ElementTree as ET
 from utils.general import headers
+# 官网 tvChannelDetail 页面使用的统一广东台标识，不按节目目录 ID 猜图片。
+CHANNEL_LOGO = 'https://image-touchtv.oss-cn-shenzhen.aliyuncs.com/sitecdn/static-2025/standalone/20250724/file/gd_logo.jpg'
 
 
 @programme_result('广东广电')
@@ -65,7 +67,7 @@ def get_channels_gdtv():
             "id": [id],
             "url": "http://epg.gdtv.cn/",
             "source": "gdtv",
-            "logo": "",
+            "logo": CHANNEL_LOGO,
             "desc": "",
             "sort": "广东",
             "newestdate": cdate,

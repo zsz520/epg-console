@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 import time, datetime, re
+from urllib.parse import quote
 from utils.general import headers
 from bs4 import BeautifulSoup as bs
 
@@ -445,6 +446,14 @@ def get_epgs_tvmao2(channel, channel_id, dt, func_arg):
     return json_ret
 
 
+def channel_logo_tvmao(identifier):
+    code=str(identifier).split('-',1)[-1]
+    if not re.fullmatch(r'[A-Za-z0-9_+.-]+',code) or code in ('.','..'):
+        return ''
+    code=quote(code,safe='')
+    return f'https://pix1.tvzhe.com/images/logo/channel/{code}/{code}.jpg?1'
+
+
 @catalogue_result('电视猫')
 def get_channels_tvmao():
     url_sort = "https://www.tvmao.com/program/playing/"
@@ -500,7 +509,8 @@ def get_channels_tvmao():
                 "id": [id],
                 "url": "https://m.tvmao.com/program/%s.html" % id,
                 "source": "tvmao",
-                "logo": "",
+                # 频道页 img.chnlogo 使用同一频道代码目录；保留代码中的横线和大小写。
+                "logo": channel_logo_tvmao(id),
                 "desc": "",
                 "sort": sort_name,
                 "res": res1,

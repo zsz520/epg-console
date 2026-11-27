@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI, SourceError
 import datetime, json, os, re
+import hashlib
+import uuid
 # 默认授权集中在本文件；仍可通过 CHUANLIU_AUTHORIZATION 环境变量覆盖。
 DEFAULT_AUTHORIZATION = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI5ODQwODlhNjc1OGU0ZjJlOTViMjk4NWM4YjA1MDNmYiIsImNvbXBhbnkiOiJxaXlpIiwibmFtZSI6InRlcm1pbmFsIn0.1gDPpBcHJIE8dLiq7UekUlPWMtJOYymI8zoIYlsVgc4'
 
@@ -130,6 +132,7 @@ def get_channels_chuanliu():
     ret_data = j["ret_data"]
     if not isinstance(ret_data, list):
         raise ValueError('接口请求成功，但没有提供有效频道目录。')
+    logos=channel_logos_chuanliu()
     for c in ret_data:
         name = c["bd_name"]
         name2 = c["name"]
@@ -142,12 +145,32 @@ def get_channels_chuanliu():
             "id": [id],
             "url": "",  # url,
             "source": "chuanliu",
-            "logo": "",
+            "logo": c.get('logo') or c.get('icon_url') or logos.get(str(id),''),
             "desc": "",
             "sort": sort,
         }
         channels.append(channel)
     return channels
+
+
+def channel_logos_chuanliu():
+    """3.1.1 APK 的独立推荐配置接口；按 ch_id 对应，缺失时不猜台标。"""
+    params={'open_token':'','card_count_limit':'1000','device_version':'scni_apk'}
+    app_key='9bbOVW7r8VqvCfk7'
+    signature=''.join(key+'='+value+'|' for key,value in sorted(params.items()))+app_key
+    params['sign']=hashlib.md5(signature.encode()).hexdigest()
+    try:
+        response=requests.post('https://scn-integration-public.ptqy.gitv.tv/public/api/config/live_recommend_card',
+            data=params,headers={'X-Request-Id':str(uuid.uuid4())},timeout=(5,10))
+        data=response.json()
+        if data.get('status',{}).get('code')!='C00000':
+            raise ValueError('配置接口未返回成功状态。')
+        rows=data.get('data',{}).get('config',{}).get('live_recommend_card',[])
+        return {str(row['ch_id']):row['icon_url'] for row in rows
+                if row.get('ch_id') is not None and str(row.get('icon_url','')).startswith(('https://','http://'))}
+    except (ValueError,TypeError,KeyError,requests.exceptions.RequestException):
+        print('川流 TV：台标配置暂不可用，保留频道目录和已有台标。')
+        return {}
 
 
 def get_sorts_type():

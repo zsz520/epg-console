@@ -3,6 +3,7 @@ from crawl.source_utils import programme_result, catalogue_result, SHANGHAI
 """搜视目录和节目表；重试、跨日与缺失补全由公共流程处理。"""
 import datetime
 import re
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin, urlsplit
 
 import requests
@@ -191,7 +192,40 @@ def get_channels_tvsou():
                                      'source': 'tvsou', 'logo': '', 'desc': '', 'sort': category})
         if not channels:
             raise TvsouError('目录中没有有效频道，请检查页面结构，保留原目录。')
+        # 总目录只有文字；分类页的 span CSS background 中才有频道台标。
+        logos={}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            for found in pool.map(catalogue_logos_tvsou,('yangshi','weishi','shuzi','gaoqing','sports','yule','dianjing')):
+                logos.update(found)
+        for row in channels:
+            row['logo']=logos.get(row['id'][0],'')
+        print(f'搜视：已提取 {sum(bool(row["logo"]) for row in channels)} 个频道台标。')
         print(f'搜视：共有 {group_count} 个分类，{len(channels)} 个频道。')
         return channels
     except TvsouError as exc:
         raise ValueError(f'搜视频道目录获取失败：{exc}') from None
+
+
+def catalogue_logos_tvsou(category):
+    try:
+        soup=fetch_page(f'/epg/{category}/')
+    except TvsouError as exc:
+        print(f'搜视：{category} 台标页读取失败，不影响频道目录：{exc}')
+        return {}
+    found={}
+    for link in soup.select('a[href]'):
+        match=re.fullmatch(r'/epg/(?:[A-Za-z0-9_-]+/)?([A-Za-z0-9_-]+)/?',urlsplit(link['href']).path)
+        if not match:continue
+        image=link.select_one('img[src]')
+        logo=image.get('src','') if image else ''
+        if not logo:
+            styled=link.select_one('[style]')
+            background=re.search(r'url\(\s*[\'"]?([^\)\'"\s]+)',styled.get('style','')) if styled else None
+            if background:logo=background[1]
+        if logo:
+            logo=urljoin(HOST,logo)
+            # 此上游域名含下划线，HTTPS 主机名校验失败；其图片 HTTP 可访问。
+            if urlsplit(logo).hostname=='51_filehouse.tianmaolive.com':
+                logo='http://'+logo.split('://',1)[1]
+            if urlsplit(logo).scheme in ('http','https'):found[match[1]]=logo
+    return found

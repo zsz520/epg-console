@@ -176,10 +176,12 @@ def refresh_catalog(source, items):
         valid[identifier] = {
             'out_name': name, 'normalized_name': name_key(name), 'is_alive': True,
             'category': str(item.get('sort', ''))[:100],
-            'logo': str(item.get('logo', '') or '')[:500],
             'regions': [str(value)[:80] for value in item.get('regions',[])][:100],
             'update_date': datetime.date.today(),
         }
+        # 可选台标接口失败/未提供时，不清空此前成功抓到的台标。
+        if item.get('logo'):
+            valid[identifier]['logo']=str(item['logo'])[:500]
     with transaction.atomic():
         new = updated = 0
         for identifier, fields in valid.items():
