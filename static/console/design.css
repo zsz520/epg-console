@@ -79,6 +79,11 @@
 .epg-app :is(.source-comparison,.custom-preview-toolbar,.maintenance-confirm) { border-color:var(--epg-border); border-radius:12px; background:var(--epg-soft); }
 .epg-app .source-preview-card { border:1px solid var(--epg-border); border-radius:12px; padding:18px; }
 .epg-app .source-preview-heading strong { font-size:14px; }
+.epg-app .source-logo-select { display:block; width:100%; max-width:700px; min-width:0; margin-top:8px; }
+.epg-app .source-logo-tools { display:flex; align-items:center; gap:12px; flex-wrap:wrap; max-width:850px; }
+.epg-app .source-logo-tools select { flex:1 1 240px; }
+.epg-app .source-logo-preview { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--epg-muted); }
+.epg-app .source-logo-preview img { display:block; width:64px; height:48px; object-fit:contain; padding:4px; border:1px solid var(--epg-border); border-radius:8px; background:var(--epg-soft); }
 .epg-app .comparison-actions,.epg-app .preview-card-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .epg-app .source-preview-heading>strong { min-width:0; overflow-wrap:anywhere; flex:1; }
 .epg-app button.preview-card-close { min-height:32px; height:32px; width:32px; padding:0; font-size:21px; line-height:1; }

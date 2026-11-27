@@ -256,7 +256,7 @@ class ConsoleSite(AdminSite):
         from .xmltv import source_name
         return JsonResponse({'results': [
             {'id': r.pk, 'name': r.out_name, 'source': r.source, 'source_name': source_name(r.out_channel_id) if r.source == 'xmltv' else SOURCE_NAMES.get(r.source, r.source),
-             'identifier': r.out_channel_id, 'category': r.category}
+             'identifier': r.out_channel_id, 'category': r.category, 'logo': r.logo}
             for r in rows.order_by('out_name', 'source')[:options()['catalog_search_limit']]
         ]})
 

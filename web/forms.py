@@ -181,12 +181,24 @@ class CatalogPicker(forms.Widget):
         import json
         context['xmltv_feeds_json'] = json.dumps(dict((str(pk), name) for pk, name in XmltvFeed.objects.values_list('pk', 'name')), ensure_ascii=False)
         context['original_mapping'] = self.attrs.get('data-original-mapping', '')
+        from django.db.models import Q
+        try:
+            entries=parse_mapping_entries(self.attrs.get('data-logo-mapping',context['original_mapping']))
+        except ValidationError:
+            entries=[]
+        matched=Q(pk__in=value or [])
+        for source,identifier in entries:
+            matched |= Q(source=source,out_channel_id=identifier)
+        context['logo_sources_json']=json.dumps([
+            {'source':row.source,'identifier':row.out_channel_id,'logo':row.logo}
+            for row in Channel_list.objects.filter(matched) if row.logo
+        ],ensure_ascii=False)
         context['channel_pk'] = self.attrs.get('data-channel-pk', '')
         context['search_name'] = self.attrs.get('data-search-name', '')
         return context
 
     class Media:
-        js = ['console/source-mapping.js', 'console/catalog-picker.js', 'console/source-preview.js']
+        js = ['console/source-mapping.js', 'console/source-logos.js', 'console/catalog-picker.js', 'console/source-preview.js']
 
 
 class ChannelForm(forms.ModelForm):
@@ -214,6 +226,7 @@ class ChannelForm(forms.ModelForm):
             mapping = []
         configure_primary_source(self, mapping)
         self.fields['catalog_entries'].widget.attrs['data-original-mapping'] = self.instance.channel_id or ''
+        self.fields['catalog_entries'].widget.attrs['data-logo-mapping'] = mapping_text(mapping)
         self.fields['catalog_entries'].widget.attrs['data-channel-pk'] = self.instance.pk or ''
         self.fields['catalog_entries'].widget.attrs['data-search-name'] = (
             self.data.get('tvg_name', '') if self.is_bound else self.instance.tvg_name) or ''

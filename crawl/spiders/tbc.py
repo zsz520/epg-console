@@ -1,3 +1,4 @@
+from urllib.parse import urljoin
 # -*- coding:utf-8 -*-
 from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 import datetime, time, re, os
@@ -84,7 +85,7 @@ def get_channels_tbc():
     for li in lis:
         name = li["title"]
         id = li["id"]
-        img = li.select("img")[0]["src"]
+        img = urljoin("https://www.tbc.net.tw/EPG",li.select("img")[0]["src"])
         url = li.a["href"]
         channel = {
             "name": name,

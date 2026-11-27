@@ -1,6 +1,7 @@
 """中华电信 MOD 官方频道目录与按日节目表。"""
 import datetime
 import re
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from crawl.source_utils import source_http as requests, programme_result, catalogue_result, SHANGHAI
 from utils.general import headers
@@ -54,7 +55,10 @@ def get_channels_mod():
         identifier = str(int(match[1])).zfill(3)
         if anchor.get_text(strip=True) == '頻道總表':
             continue
+        tile=anchor.find_parent('div',class_='list_item')
+        image=tile.select_one('.pic img') if tile else None
+        logo=urljoin(HOST,image.get('src','').strip()) if image and image.get('src') else ''
         channels.append({'name': anchor.get_text(' ', strip=True), 'id': [identifier],
             'url': HOST + '/program.do?id=' + str(int(identifier)), 'source': 'mod',
-            'logo': '', 'desc': '', 'sort': '海外'})
+            'logo': logo, 'desc': '', 'sort': '海外'})
     return channels

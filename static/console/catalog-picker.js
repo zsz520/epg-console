@@ -21,8 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const sourceName = (source, identifier) => source === 'xmltv'
       ? `XMLTV · ${feeds[identifier.split(':',1)[0]] || '文件 ' + identifier.split(':',1)[0]}`
       : names.get(source) || source;
+    for (const row of JSON.parse(root.dataset.logoSources || '[]')) {
+      metadata.set(row.source+':'+row.identifier,row);
+    }
     for (const chip of selected.children) {
-      metadata.set(chip.dataset.source + ':' + chip.dataset.identifier, {
+      const key=chip.dataset.source + ':' + chip.dataset.identifier;
+      metadata.set(key, {
+        ...metadata.get(key),
         id:chip.dataset.id, name:chip.dataset.name || matchName?.value || '',
         source_name:sourceName(chip.dataset.source,chip.dataset.identifier)
       });
@@ -32,6 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!valid) throw new Error('请先修正来源 ID 格式，再选择频道。');
       return new Map(current);
     };
+    const updateLogos=()=>root.dispatchEvent(new CustomEvent('catalog-logo-options',{
+      detail:[...current].map(([key,identifier])=>{
+        const source=M.source(key), row=metadata.get(source+':'+identifier);
+        return {logo:row?.logo || '',label:sourceName(source,identifier)};
+      })
+    }));
     const render = () => {
       selected.replaceChildren();
       for (const [key, identifier] of current) {
@@ -53,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         remove.textContent='×'; remove.setAttribute('aria-label',`移除来源：${sourceName(source,identifier)}`);
         chip.append(handle,label,remove); selected.append(chip);
       }
+      updateLogos();
     };
     const sync = (next, promote=false) => {
       if (promote) next = M.promote(next,primary.value);
@@ -80,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const reconcile = () => {
       try { sync(parse(idField.value),true); }
-      catch(error) { valid=false; selected.replaceChildren(); notice.textContent=error.message; }
+      catch(error) { valid=false; selected.replaceChildren(); root.dispatchEvent(new CustomEvent('catalog-logo-options',{detail:[]})); notice.textContent=error.message; }
     };
     idField.addEventListener('input',()=>{if(!writing) reconcile();});
     primary.addEventListener('change',()=>{
