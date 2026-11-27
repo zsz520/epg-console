@@ -15,9 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let chosenDate=dateField.value, generation=0;
     const compared=new Map();
     let active = 0;
-    const inFlight = new Set();
-    const controllers = new Set();
+    const requests = new Map();
     const waiting = [];
+    const closeAllButton=root.querySelector('.preview-close-all');
+    const identity=target=>JSON.stringify([target.source,target.identifier]);
+    const requestKey=(target,date,version)=>JSON.stringify([target.source,target.identifier,date,version]);
+    const updateClose=()=>{if(closeAllButton)closeAllButton.disabled=compared.size===0;};
     const el = (tag, text, className) => {
       const node = document.createElement(tag); if (text != null) node.textContent = text;
       if (className) node.className = className; return node;
@@ -25,6 +28,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const button = (text, action) => {
       const node = el('button', text, 'secondary'); node.type = 'button'; node.addEventListener('click', action); return node;
     };
+    const closeTarget=target=>{
+      const id=identity(target);
+      compared.delete(id);
+      for(let index=waiting.length-1;index>=0;index--)if(identity(waiting[index].target)===id)waiting.splice(index,1);
+      for(const [key,job] of requests){
+        if(job.identity===id){requests.delete(key);job.controller.abort();}
+      }
+      const key=requestKey(target,chosenDate,generation);
+      elements.get(key)?.remove();elements.delete(key);
+      updateClose();
+      notice.textContent=compared.size?`当前对比 ${chosenDate} 的 ${compared.size} 个来源。`:'已关闭全部节目对比，已选择的来源保持不变。';
+    };
+    const headingFor=(target,name,refresh=true)=>{
+      const heading=el('div',null,'source-preview-heading');
+      const actions=el('div',null,'preview-card-actions');
+      if(refresh)actions.append(button('重新抓取',()=>schedule(target,true)));
+      const close=button('×',()=>closeTarget(target));close.classList.add('preview-card-close');
+      close.title='关闭此对比卡片';close.setAttribute('aria-label',`关闭 ${target.source_name} 的节目对比`);
+      actions.append(close);heading.append(el('strong',name),actions);
+      return heading;
+    };
+    closeAllButton?.addEventListener('click',()=>{
+      generation++;compared.clear();waiting.splice(0);
+      for(const job of requests.values())job.controller.abort();
+      requests.clear();elements.clear();cards.replaceChildren();updateClose();
+      notice.textContent='已关闭全部节目对比，已选择的来源保持不变。';
+    });
+    updateClose();
     const targetFor = (source, identifier) => {
       if (!identifier) return null;
       if (customTargets.has(source + ':' + identifier)) return customTargets.get(source + ':' + identifier);
@@ -62,8 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clock = value => value ? new Date(value).toLocaleTimeString('zh-CN', {timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}) : '未提供';
     const paint = (card, target, data) => {
       card.replaceChildren();
-      const heading = el('div', null, 'source-preview-heading');
-      heading.append(el('strong', data.origin_name ? 'XMLTV · ' + data.origin_name : target.source_name), button('重新抓取', () => schedule(target,true)));
+      const heading = headingFor(target,data.origin_name ? 'XMLTV · ' + data.origin_name : target.source_name);
       card.append(heading, el('code', target.identifier, 'source-preview-id'));
       const fetched = data.fetched_at ? new Date(data.fetched_at).toLocaleTimeString('zh-CN',{hour12:false,timeZone:'Asia/Shanghai'}) : '';
       card.append(el('p', `${data.date || ''} · ${data.count || 0} 条 · ${data.cached ? '缓存' : (data.origin_updated_at ? '读取文件快照' : '实时抓取')} ${fetched}`, 'preview-meta'));
@@ -94,12 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     const run = async (target, force, date, version) => {
-      const key = target.source + ':' + target.identifier + ':' + date + ':' + version;
-      inFlight.add(key);
+      if(version!==generation || !compared.has(identity(target)))return;
+      const key = requestKey(target,date,version);
       let card = elements.get(key);
       if (!card) { card = el('article',null,'source-preview-card'); elements.set(key,card); cards.append(card); }
-      card.replaceChildren(el('strong',target.source_name), el('p',`正在读取 ${date} 节目，最长等待约 ${root.dataset.previewTimeout || 15} 秒…`));
-      const controller=new AbortController();controllers.add(controller);
+      card.replaceChildren(headingFor(target,target.source_name,false), el('p',`正在读取 ${date} 节目，最长等待约 ${root.dataset.previewTimeout || 15} 秒…`));
+      const controller=new AbortController();
+      const job={controller,identity:identity(target)};requests.set(key,job);
+      const current=()=>version===generation && requests.get(key)===job && elements.get(key)===card;
       const timer=setTimeout(()=>controller.abort(),(Number(root.dataset.previewTimeout || 15)+15)*1000);
       try {
         const response = await fetch(root.dataset.previewUrl, {method:'POST',headers:{'Content-Type':'application/json',
@@ -108,14 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if(response.redirected) throw new Error('登录已过期，请重新登录后刷新页面。');
         if (!response.ok) throw new Error(response.status === 403 ? '没有预览权限或登录已过期，请刷新页面。' : '节目预览失败，请重试。');
         const data=await response.json();
-        if(version===generation) paint(card,target,data);
-      } catch (error) { if(version===generation) paint(card,target,{status:'error', message:error.name==='AbortError'?'预览请求等待超时，请重新抓取或检查网络。':error.message,programmes:[]}); }
-      finally { clearTimeout(timer);controllers.delete(controller);inFlight.delete(key); }
+        if(current()) paint(card,target,data);
+      } catch (error) { if(current()) paint(card,target,{status:'error', message:error.name==='AbortError'?'预览请求等待超时，请重新抓取或检查网络。':error.message,programmes:[]}); }
+      finally { clearTimeout(timer);if(requests.get(key)===job)requests.delete(key); }
     };
     const schedule = (target, force=false) => {
-      const key=target.source+':'+target.identifier+':'+chosenDate+':'+generation;
-      compared.set(target.source+':'+target.identifier,target);
-      if(inFlight.has(key)) return;
+      const key=requestKey(target,chosenDate,generation);
+      compared.set(identity(target),target);updateClose();
+      if(requests.has(key)) return;
       if(!waiting.some(job=>job.target.source===target.source && job.target.identifier===target.identifier && job.date===chosenDate))
         waiting.push({target,force,date:chosenDate,generation});
       pump();
@@ -130,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if(dateField.value===chosenDate) return;
       chosenDate=dateField.value;generation++;
-      controllers.forEach(controller=>controller.abort());
+      for(const job of requests.values())job.controller.abort();
+      requests.clear();
       waiting.splice(0);elements.clear();cards.replaceChildren();updateDays();
       const targets=[...compared.values()];
       targets.forEach(target=>schedule(target));

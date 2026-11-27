@@ -353,6 +353,7 @@ class Channel_list(models.Model):
     inner_name = models.CharField("内部tvg-name", max_length=100, blank=True)
     out_name = models.CharField("来源网站上的名称", max_length=160)
     normalized_name = models.CharField('合并匹配名称', max_length=160, db_index=True, blank=True)
+    search_identifier = models.CharField('来源原始频道 ID',max_length=300,blank=True,default='',editable=False)
     logo = models.CharField('台标', max_length=500, blank=True)
     category = models.CharField('分类', max_length=100, blank=True)
     source = models.CharField("来源网站", max_length=20)
@@ -363,6 +364,13 @@ class Channel_list(models.Model):
     update_date = models.DateField("更新日期", default=datetime.date.today)
 
     # del_date = models.DateField('来源网站取消日期',auto_now_add=True)
+    def save(self,*args,**kwargs):
+        from .catalog_identifiers import searchable_identifier
+        self.search_identifier=searchable_identifier(self.source,self.out_channel_id)
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields']=set(kwargs['update_fields'])|{'search_identifier'}
+        return super().save(*args,**kwargs)
+
     def __str__(self):
         return "%s-%s-%s" % (self.inner_channel_id, self.inner_name, self.out_name)
 

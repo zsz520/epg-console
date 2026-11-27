@@ -79,6 +79,9 @@
 .epg-app :is(.source-comparison,.custom-preview-toolbar,.maintenance-confirm) { border-color:var(--epg-border); border-radius:12px; background:var(--epg-soft); }
 .epg-app .source-preview-card { border:1px solid var(--epg-border); border-radius:12px; padding:18px; }
 .epg-app .source-preview-heading strong { font-size:14px; }
+.epg-app .comparison-actions,.epg-app .preview-card-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.epg-app .source-preview-heading>strong { min-width:0; overflow-wrap:anywhere; flex:1; }
+.epg-app button.preview-card-close { min-height:32px; height:32px; width:32px; padding:0; font-size:21px; line-height:1; }
 .epg-app .catalog-chip { background:var(--epg-blue-soft); color:#1d4ed8; border:1px solid #dbeafe; border-radius:20px; }
 .epg-app .catalog-chip button { background:transparent; border:0; padding:2px 5px; min-height:26px; color:var(--epg-blue); }
 .epg-app .category-option { border-radius:9px; border-color:var(--epg-border); }

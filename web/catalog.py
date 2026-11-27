@@ -65,6 +65,24 @@ def name_key(value):
     return re.sub(r'\s+', '', unicodedata.normalize('NFKC', cht_to_chs(value or ''))).casefold()
 
 
+def search_catalog(rows,query):
+    """Each search term may match a name, provider label or raw/mapping ID."""
+    from django.db.models import Q
+    from .models import XmltvFeed
+    terms=query.strip()[:100].split()
+    if not terms:return rows
+    feeds=list(XmltvFeed.objects.values_list('pk','name'))
+    for term in terms:
+        normalized=name_key(term)
+        providers=[key for key,label in SOURCE_NAMES.items() if normalized in name_key(key) or normalized in name_key(label)]
+        matching=Q(out_name__icontains=term)|Q(normalized_name__icontains=normalized)|Q(out_channel_id__icontains=term)|Q(search_identifier__icontains=term)|Q(source__in=providers)
+        for pk,name in feeds:
+            if normalized in name_key('XMLTV · '+name):
+                matching|=Q(source='xmltv',out_channel_id__startswith=f'{pk}:')
+        rows=rows.filter(matching)
+    return rows
+
+
 def mapping_key(source, identifier):
     if source == 'xmltv':
         if not re.fullmatch(r'[1-9]\d*:[A-Za-z0-9_+/-]+={0,2}', identifier):

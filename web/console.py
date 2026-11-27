@@ -249,7 +249,8 @@ class ConsoleSite(AdminSite):
         query = request.GET.get('q', '').strip()[:100]
         rows = Channel_list.objects.filter(is_alive=True)
         if query:
-            rows = rows.filter(Q(out_name__icontains=query) | Q(normalized_name__icontains=name_key(query)) | Q(out_channel_id__icontains=query))
+            from .catalog import search_catalog
+            rows = search_catalog(rows,query)
         if request.GET.get('source'):
             rows = rows.filter(source=request.GET['source'])
         from .xmltv import source_name
@@ -346,7 +347,8 @@ class ConsoleSite(AdminSite):
         source = request.GET.get('source', '')
         rows = Channel_list.objects.filter(is_alive=True)
         if query:
-            rows = rows.filter(Q(out_name__icontains=query) | Q(normalized_name__icontains=name_key(query)))
+            from .catalog import search_catalog
+            rows = search_catalog(rows,query)
         if source:
             rows = rows.filter(source=source)
         error = ''

@@ -237,6 +237,10 @@ class ChannelListAdmin(admin.ModelAdmin):
     readonly_fields = ('normalized_name','regions')
     actions = ('add_as_one_channel', 'add_as_separate_channels')
 
+    def get_search_results(self,request,queryset,search_term):
+        from .catalog import search_catalog
+        return search_catalog(queryset,search_term),False
+
     def has_import_channels_permission(self, request):
         return request.user.has_perm('web.add_channel') and request.user.has_perm('web.change_channel_list')
 
