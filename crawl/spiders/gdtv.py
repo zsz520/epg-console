@@ -5,7 +5,8 @@ import datetime, os
 import xml.etree.ElementTree as ET
 from utils.general import headers
 # 官网 tvChannelDetail 页面使用的统一广东台标识，不按节目目录 ID 猜图片。
-CHANNEL_LOGO = 'https://image-touchtv.oss-cn-shenzhen.aliyuncs.com/sitecdn/static-2025/standalone/20250724/file/gd_logo.jpg'
+# CHANNEL_LOGO = 'https://image-touchtv.oss-cn-shenzhen.aliyuncs.com/sitecdn/static-2025/standalone/20250724/file/gd_logo.jpg'
+CHANNEL_LOGO = 'https://img.gdtv.cn/image/202010/0.267579252589195161fbecf64d4705c1fOSS1603767828.png'
 
 
 @programme_result('广东广电')
