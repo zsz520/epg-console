@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   update();
   const form=document.querySelector('.settings-center-form');
   if(form){
-    const snapshot=()=>JSON.stringify([...new FormData(form).entries()]);
+    const snapshot=()=>JSON.stringify([...new FormData(form).entries()].filter(([key])=>key!=='csrfmiddlewaretoken'));
     const initial=snapshot();let submitting=false;
     const state=document.createElement('span');state.setAttribute('role','status');state.className='settings-save-state';
     const submit=form.querySelector('button[type="submit"],input[type="submit"]');

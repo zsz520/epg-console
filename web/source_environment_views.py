@@ -70,7 +70,7 @@ def container_proxies(source):
 
 def response_private(response):
     response['Cache-Control']='no-store'
-    response['Referrer-Policy']='no-referrer'
+    response['Referrer-Policy']='same-origin'
     return response
 
 

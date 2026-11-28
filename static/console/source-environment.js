@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     status.textContent='正在建连并请求来源健康地址…';
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),60000);
     try{
+      const token=window.epgCsrfToken?await window.epgCsrfToken():form.querySelector('[name=csrfmiddlewaretoken]').value;
       const response=await fetch(panel.dataset.testUrl,{method:'POST',signal:controller.signal,headers:{
-        'Content-Type':'application/json','X-CSRFToken':form.querySelector('[name=csrfmiddlewaretoken]').value
+        'Content-Type':'application/json','Accept':'application/json','X-CSRFToken':token
       },body:JSON.stringify({index:button.dataset.index==='all'?null:Number(button.dataset.index)})});
       if(response.redirected)throw Error('登录已过期，请重新登录。');
       const data=await response.json();

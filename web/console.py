@@ -47,7 +47,9 @@ class ConsoleSite(AdminSite):
 
     def get_urls(self):
         from django.views.decorators.csrf import csrf_protect
+        from .csrf import refresh
         return [
+            path('csrf-token/',refresh,name='csrf-token'),
             path('source-environments/',csrf_protect(self.source_environment),name='source-environments'),
             path('source-environments/<str:source_id>/',csrf_protect(self.source_environment),name='source-environment-edit'),
             path('source-environments/<str:source_id>/test/',csrf_protect(self.source_environment_test),name='source-environment-test'),
