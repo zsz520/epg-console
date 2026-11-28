@@ -12,6 +12,10 @@ SOURCE_ID = 'example'
 SOURCE_NAME = '示例来源'
 CHANNELS_URL = 'https://example.invalid/api/channels'
 EPG_URL = 'https://example.invalid/api/programmes'
+# 可选：后台代理测试只访问此静态地址；替换为来源自身的真实接口。
+SOURCE_HEALTH_URL = 'https://example.invalid/api/channels'
+# 代理和其他变量在后台“来源环境”配置；Requests 自动使用公共轮换代理。
+# 需要自定义变量时在抓取函数中 os.getenv('EXAMPLE_...')，不要输出密码。
 ZONE = ZoneInfo('Asia/Shanghai')
 HEADERS = {'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'}
 # 来源统一使用同一台标时填写完整图片地址；每频道台标优先。

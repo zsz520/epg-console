@@ -25,6 +25,8 @@ class ConsoleSite(AdminSite):
 
     def get_app_list(self, request, app_label=None):
         apps = super().get_app_list(request, app_label)
+        if request.user.is_active and request.user.is_staff and not any(a['app_label']=='web' for a in apps):
+            apps.append({'name':'EPG 管理','app_label':'web','app_url':'/admin/','has_module_perms':True,'models':[]})
         for app in apps:
             if app['app_label'] == 'web' and request.user.has_perm('web.view_task'):
                 from django.urls import reverse
@@ -33,6 +35,8 @@ class ConsoleSite(AdminSite):
                     'perms': {'view': True}, 'admin_url': reverse('admin:operations'),
                     'add_url': None, 'view_only': True})
             if app['app_label'] == 'web':
+                app['models'].insert(3,{'name':'来源环境','object_name':'SourceEnvironmentWorkspace','perms':{'view':True},
+                    'admin_url':'/admin/source-environments/','add_url':None,'view_only':True})
                 if request.user.has_perm('web.view_runtimeconfig'):
                     app['models'].insert(2,{'name':'设置中心','object_name':'SettingsWorkspace','perms':{'view':True},
                         'admin_url':'/admin/settings/','add_url':None,'view_only':True})
@@ -42,7 +46,11 @@ class ConsoleSite(AdminSite):
         return [app for app in apps if app['models']]
 
     def get_urls(self):
+        from django.views.decorators.csrf import csrf_protect
         return [
+            path('source-environments/',csrf_protect(self.source_environment),name='source-environments'),
+            path('source-environments/<str:source_id>/',csrf_protect(self.source_environment),name='source-environment-edit'),
+            path('source-environments/<str:source_id>/test/',csrf_protect(self.source_environment_test),name='source-environment-test'),
             path('maintenance/',self.admin_view(self.maintenance),name='maintenance'),
             path('maintenance/backups/<str:name>/',self.admin_view(self.backup_download),name='backup-download'),
             path('channels/transfer/',self.admin_view(self.channel_transfer),name='channel-transfer'),
@@ -59,6 +67,14 @@ class ConsoleSite(AdminSite):
             path('channels/<int:pk>/quick/', self.admin_view(self.quick_channel), name='quick-channel'),
             path('channels/reorder/', self.admin_view(self.reorder_channels), name='channel-reorder'),
         ] + super().get_urls()
+
+    def source_environment(self,request,source_id=None):
+        from .source_environment_views import center
+        return center(self,request,source_id)
+
+    def source_environment_test(self,request,source_id):
+        from .source_environment_views import test
+        return test(self,request,source_id)
 
     def require(self, request, *permissions):
         if not request.user.has_perms(permissions):

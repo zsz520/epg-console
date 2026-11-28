@@ -1,0 +1,6 @@
+{% extends 'admin/base_site.html' %}{% block content_title %}{% endblock %}{% block content %}
+<section class="hero compact"><div><h1>来源环境</h1><p>为每个来源单独配置代理和环境变量，保存后下一次调用生效。空值沿用容器环境及来源默认配置。</p></div><a href="{% url 'admin:settings-center' %}">设置中心 →</a></section>
+{% for error in source_errors %}<p class="errornote">{{ error }}</p>{% endfor %}
+<section class="panel"><div class="table-scroll"><table><thead><tr><th>来源 ID</th><th>名称</th><th>当前代理</th><th>配置来源</th><th>更新时间 / 操作者</th><th>操作</th></tr></thead><tbody>
+{% for row in rows %}<tr><td><code>{{ row.id }}</code></td><td>{{ row.name }}</td><td>{% for proxy in row.proxies %}<div><code>{{ proxy }}</code></div>{% empty %}未配置{% endfor %}</td><td>{{ row.origin }}<br><small>其他变量：{{ row.extra_origin }}</small></td><td>{{ row.updated_at|date:'Y-m-d H:i:s'|default:'—' }}<br>{{ row.updated_by|default:'—' }}</td><td><a class="button" href="{% url 'admin:source-environment-edit' row.id %}">编辑</a></td></tr>{% endfor %}
+</tbody></table></div></section>{% endblock %}

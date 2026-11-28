@@ -49,12 +49,15 @@ def main(pk):
         return
     from .xmltv import refresh_feeds_for_task
     xmltv_results = []
-    if task.kind == 'xmltv' or (task.kind == 'epg' and opts['xmltv_with_epg']):
+    if task.kind == 'xmltv' or (task.kind == 'epg' and opts['xmltv_with_epg']
+            and (not task.params.get('environment_crawl') or task.source=='xmltv')):
         xmltv_results = refresh_feeds_for_task(task)
     if task.kind == 'xmltv':
         passed = sum(row['status'] == 'success' for row in xmltv_results)
         Task.objects.filter(pk=pk).update(status='success' if passed == len(xmltv_results) else ('partial' if passed else 'failed'),
             summary=f'{passed}/{len(xmltv_results)} 个 XMLTV 来源更新成功；成功来源已同步目录，失败时保留原数据。节目入库请执行抓取节目单。')
+        if task.params.get('environment_crawl'):
+            queue_environment_epg(task)
         return
     if task.kind == 'catalog':
         from .runtime_config import get_config
@@ -116,7 +119,11 @@ def main(pk):
         Task.objects.filter(pk=pk).update(
             status='success' if passed == len(results) else ('partial' if passed else 'failed'),
             summary=f'{passed}/{len(results)} 个来源更新成功；失败或空列表保留原有目录。')
+        if task.params.get('environment_crawl'):
+            queue_environment_epg(task)
     else:
+        if task.source and task.params.get('environment_crawl'):
+            os.environ['EPG_SOURCE_ONLY']=task.source
         if task.params.get('channel_ids'):
             os.environ['EPG_CHANNEL_IDS'] = ','.join(map(str, task.params['channel_ids']))
         from crawl.crawl import main as crawl_main, gen_xml
@@ -149,6 +156,24 @@ def main(pk):
             from utils.general import dirs
             from .models import Channel
             gen_test_m3u(Channel.get_need_channels(Channel, 'all')[0], dirs['testm3u_dir'])
+
+
+def queue_environment_epg(task):
+    from .models import Channel
+    from .catalog import parse_mapping_entries
+    from .tasks import enqueue
+    ids=[]
+    for channel in Channel.objects.filter(ineed=1,has_epg=1):
+        try:
+            if any(source==task.source for source,_ in parse_mapping_entries(channel.channel_id)):
+                ids.append(channel.pk)
+        except Exception:continue
+    if ids:
+        child,_=enqueue('epg',source=task.source,user=task.requested_by,
+            params={'environment_crawl':True,'channel_ids':ids})
+        Task.objects.filter(pk=task.pk).update(summary=Task.objects.get(pk=task.pk).summary+f' 节目任务 #{child.pk} 已提交（{len(ids)} 个已配置频道）。')
+    else:
+        Task.objects.filter(pk=task.pk).update(summary=Task.objects.get(pk=task.pk).summary+' 尚无已启用频道配置此来源；请从目录添加频道后抓取节目。')
 
 
 if __name__ == '__main__':

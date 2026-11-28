@@ -11,6 +11,8 @@ from web.models import Channel, Epg
 ##log(msg,level=1),日志写入数据库并打印
 ##gen_trans_m3u(上传文件目录，下载文件目录） 将已经上传的文件与频道名称匹配并保存
 def log(msg, level=1):  # 写日志 1正常 2错误
+    from crawl.source_env import redact
+    msg = redact(msg)
     t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + " "
     m = t + "\t" + str(msg)
     dbinfo = Crawl_log(msg=msg, level=level)

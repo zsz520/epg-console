@@ -10,6 +10,21 @@ from django.utils import timezone
 tz_sh = tz.gettz("Asia/Shanghai")
 
 
+class SourceEnvironment(models.Model):
+    source_id=models.CharField('来源 ID',max_length=20,unique=True)
+    proxies=models.TextField('代理列表',blank=True,default='')
+    extra_env=models.JSONField('其他环境变量',default=dict,blank=True)
+    updated_at=models.DateTimeField('更新时间',auto_now=True)
+    updated_by=models.ForeignKey('auth.User',null=True,blank=True,on_delete=models.SET_NULL,related_name='+')
+
+    class Meta:
+        verbose_name='来源运行环境'
+        verbose_name_plural='来源运行环境'
+
+    def __str__(self):
+        return self.source_id
+
+
 class RuntimeConfig(models.Model):
     last_daily_full_refresh = models.DateField(null=True, blank=True, editable=False)
     SCHEDULE_MODES = [('interval', '每隔一段时间'), ('daily', '每天指定时间点')]

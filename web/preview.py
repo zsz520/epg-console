@@ -71,11 +71,14 @@ def preview(source, identifier, name, force=False, date=None):
     from crawl.source_registry import registry
     provider=registry()[0].get(source)
     revision=[]
+    from .models import SourceEnvironment
+    environment_revision=list(SourceEnvironment.objects.filter(source_id=source).values_list('updated_at',flat=True))
+    environment_revision=[stamp.isoformat() for stamp in environment_revision]
     if provider:
         try:
             stat=provider.path.stat();revision=[stat.st_mtime_ns,stat.st_size]
         except OSError: pass
-    key = hashlib.sha256(json.dumps(['validated-days-v3',source, identifier, date, version,revision,config.split_midnight,config.fill_programme_gaps,opts],sort_keys=True).encode()).hexdigest()
+    key = hashlib.sha256(json.dumps(['validated-days-v4',source, identifier, date, version,revision,environment_revision,config.split_midnight,config.fill_programme_gaps,opts],sort_keys=True).encode()).hexdigest()
     filename = directory / (key + '.json')
     if not force:
         try:

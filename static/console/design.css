@@ -79,6 +79,7 @@
 .epg-app :is(.source-comparison,.custom-preview-toolbar,.maintenance-confirm) { border-color:var(--epg-border); border-radius:12px; background:var(--epg-soft); }
 .epg-app .source-preview-card { border:1px solid var(--epg-border); border-radius:12px; padding:18px; }
 .epg-app .source-preview-heading strong { font-size:14px; }
+.epg-app .source-environment-form textarea { width:100%; box-sizing:border-box; font-family:ui-monospace,Consolas,monospace; }
 .epg-app .source-logo-select { display:block; width:100%; max-width:700px; min-width:0; margin-top:8px; }
 .epg-app .source-logo-tools { display:flex; align-items:center; gap:12px; flex-wrap:wrap; max-width:850px; }
 .epg-app .source-logo-tools select { flex:1 1 240px; }

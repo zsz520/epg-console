@@ -199,6 +199,9 @@ def get_epg(channel, dt, func_arg=0, earliest_date=None):
     sources=[mappings[first]] if first is not None else []
     if opts['fallback']:
         sources.extend(pair for index,pair in enumerate(mappings) if index!=first)
+    only=os.getenv('EPG_SOURCE_ONLY')
+    if only:
+        sources=[pair for pair in mappings if pair[0]==only]
     if not sources:
         return {'success':0,'epgs':[],'msg':'主来源未配置或未注册，且没有可用备用来源。','ban':0,'source':primary}
     ret={'success':0,'epgs':[],'msg':'没有可用节目。','ban':0,'source':primary}

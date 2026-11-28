@@ -90,26 +90,48 @@ def get_source_choices():
     return list(get_source_names().items())
 
 
+_versions={}
+
+
 def load(source):
-    if source.module: return importlib.import_module(source.module)
-    name='_epg_source_'+source.id
-    if name not in sys.modules:
-        spec=importlib.util.spec_from_file_location(name,source.path)
-        module=importlib.util.module_from_spec(spec)
-        sys.modules[name]=module
-        try: spec.loader.exec_module(module)
-        except BaseException:
+    from .source_env import LOCK,scope,active_snapshot
+    with LOCK:
+        snapshot=active_snapshot()
+        if not snapshot or snapshot['source_id']!=source.id:
+            with scope(source.id):
+                return load(source)
+        name=source.module or '_epg_source_'+source.id
+        version=(snapshot['version'],str(source.path),source.path.stat().st_mtime_ns)
+        if _versions.get(name)!=version:
             sys.modules.pop(name,None)
-            raise
-    return sys.modules[name]
+        if name not in sys.modules:
+            spec=importlib.util.spec_from_file_location(name,source.path)
+            module=importlib.util.module_from_spec(spec)
+            sys.modules[name]=module
+            try:
+                # Read current source rather than a same-second stale .pyc.
+                exec(compile(source.path.read_bytes(),str(source.path),'exec'),module.__dict__)
+                _versions[name]=version
+            except BaseException:
+                sys.modules.pop(name,None);raise
+        return sys.modules[name]
 
 
 def invoke(source,kind,*args):
-    function=getattr(load(source),source.channels if kind=='channels' else source.epg)
-    if kind=='channels': return function()
-    signature=inspect.signature(function)
-    try: signature.bind(*args,source.argument)
-    except TypeError:
-        signature.bind(*args)
-        return function(*args)
-    return function(*args,source.argument)
+    from .source_env import scope,redact
+    with scope(source.id):
+        try:
+            function=getattr(load(source),source.channels if kind=='channels' else source.epg)
+            if kind=='channels':
+                result=function()
+            else:
+                signature=inspect.signature(function)
+                try:signature.bind(*args,source.argument)
+                except TypeError:
+                    signature.bind(*args)
+                    result=function(*args)
+                else:result=function(*args,source.argument)
+            if isinstance(result,dict) and result.get('msg'):result['msg']=redact(result['msg'])
+            return result
+        except Exception as exc:
+            raise ValueError(redact(str(exc))) from None

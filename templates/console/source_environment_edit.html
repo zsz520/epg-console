@@ -1,0 +1,13 @@
+{% extends 'admin/base_site.html' %}{% load static %}{% block content_title %}{% endblock %}{% block content %}
+<section class="hero compact"><div><h1>{{ source.name }} · 来源环境</h1><p><code>{{ source.id }}</code> · 后台配置优先；清空代理列表后恢复容器代理。仅管理员可访问此页面，编辑框包含原始配置。</p></div><a href="{% url 'admin:source-environments' %}">返回来源环境 →</a></section>
+<section class="panel"><h2>容器代理</h2>{% for proxy in inherited %}<p><code>{{ proxy }}</code></p>{% empty %}<p>未配置，使用来源自身默认行为。</p>{% endfor %}<small>{{ inherited_variable }}</small></section>
+<form method="post" class="source-environment-form">{% csrf_token %}{{ form.revision }}{{ form.non_field_errors }}
+<section class="panel"><h2>代理优先级</h2>{{ form.proxies.errors }}{{ form.proxies }}<p class="hint">一行一个，支持 socks5h / socks5 / http / https；省略协议默认 socks5h。自动去重，严格按顺序尝试；后台配置代理时不会回落直连。账号密码中的特殊字符使用百分号编码。留空沿用原容器设置。</p></section>
+<section class="panel"><h2>其他环境变量</h2>{{ form.extra_env.errors }}{{ form.extra_env }}<p class="hint">每行 KEY=value，例如 HNYST_TEMPLATES=0731,0734。仅覆盖填写的键；系统、数据库、Python 路径等保留键禁止修改。</p></section>
+<section class="panel source-environment-tests" data-test-url="{% url 'admin:source-environment-test' source.id %}"><h2>连接测试</h2><p>测试已保存配置，修改后请先保存。只请求此来源的固定健康地址，禁止跳转。结果只在当前页面显示，不记录明文代理。</p>
+{% for target in health_targets %}<p><code>{{ target }}</code></p>{% empty %}<p>来源未声明静态健康地址；可在来源脚本加入 SOURCE_HEALTH_URL。XMLTV 使用已启用文件来源地址。</p>{% endfor %}
+<button type="button" class="secondary environment-test" data-index="all">测试全部</button>
+<div class="table-scroll"><table><thead><tr><th>优先级</th><th>代理</th><th>操作</th><th>最近一次结果</th></tr></thead><tbody>{% for proxy in test_proxies %}<tr data-proxy-index="{{ proxy.index }}"><td>{{ forloop.counter }}</td><td><code>{{ proxy.label }}</code></td><td><button type="button" class="secondary environment-test" data-index="{{ proxy.index }}">测试</button></td><td class="environment-test-result">尚未测试</td></tr>{% endfor %}</tbody></table></div>
+<p class="environment-test-status" role="status" aria-live="polite"></p></section>
+<div class="settings-save"><button type="submit" name="action" value="save" class="primary">保存配置</button><button type="submit" name="action" value="crawl" class="secondary">保存并立即抓取此来源</button></div>
+</form><script src="{% static 'console/source-environment.js' %}" defer></script>{% endblock %}

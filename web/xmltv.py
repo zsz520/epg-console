@@ -56,6 +56,12 @@ def parse_time(value):
 
 
 def download(url, destination):
+    from crawl.source_env import scope
+    with scope('xmltv'):
+        return _download(url,destination)
+
+
+def _download(url, destination):
     from .runtime_config import get_config
     from .options import options
     config=get_config(); opts=options(config)
